@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root { --tg-theme-bg-color: #fff; --tg-theme-text-color: #000; --tg-theme-hint-color: #999; --tg-theme-button-color: #2481cc; --tg-theme-secondary-bg-color: #efeff3; }
+        body { font-family: -apple-system, sans-serif; background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 15px; }
+        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; }
+        .btn { background: var(--tg-theme-button-color); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-size: 12px; color: var(--tg-theme-hint-color); margin-bottom: 4px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .hidden { display: none; }
+        .transfer { background: #e3f2fd; border-left: 4px solid var(--tg-theme-button-color); padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
+        .trash-badge { color: red; font-size: 12px; cursor: pointer; }
+    </small></style>
+</head>
+<body>
+
+    <!-- ЭКРАН 1: СПИСОК ПРОЕКТОВ -->
+    <div id="dashboard">
+        <div style="display:flex; justify-content: space-between; align-items:center;">
+            <h2>Мои проекты</h2>
+            <button class="btn" style="width:auto; padding: 8px 15px;" onclick="createNewProject()">+ Новый</button>
+        </div>
+        <div id="projectList"></div>
+        <button class="btn" style="background:#8e8e93; margin-top: 20px;" onclick="showTrash()">Корзина</button>
+    </div>
+
+    <!-- ЭКРАН 2: РЕДАКТОР -->
+    <div id="editor" class="hidden">
+        <button onclick="showDashboard()" style="background:none; border:none; color:var(--tg-theme-button-color); cursor:pointer;">← Назад</button>
+        <h2 id="editorTitle">Новый план</h2>
+        
+        <div class="card">
+            <div class="input-group"><label>Название проекта</label><input type="text" id="projTitle"></div>
+            <div class="input-group"><label>Дата (ДД.ММ)</label><input type="text" id="projDate" placeholder="06.11"></div>
+            <div class="input-group"><label>Время сбора</label><input type="text" id="startTime" value="10:00" onchange="calculateTime()"></div>
+        </div>
+
+        <div id="blocksContainer"></div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="btn" onclick="addLocation()">+ Локация</button>
+            <button class="btn" onclick="addTransfer()">+ Переезд</button>
+        </div>
+        
+        <button class="btn" style="background:#34c759; margin-top:20px;" onclick="copyAsText()">📋 Копировать текст</button>
+        <button class="btn" style="background:#007aff;" onclick="saveToCloud()">☁️ Сохранить в облако</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let currentProjectId = null;
+        let blocks = [];
+        const userId = tg.initDataUnsafe?.user?.id?.toString() || "local-user";
+
+        // Показать список проектов
+        async function showDashboard() {
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('editor').classList.add('hidden');
+            loadProjects();
+        }
+
+        async function loadProjects(status = 'active') {
+            const { data } = await supabaseClient.from('projects').select('*').eq('user_id', userId).eq('status', status);
+            const list = document.getElementById('projectList');
+            list.innerHTML = data.length ? data.map(p => `
+                <div class="card">
+                    <b>${p.title}</b> (${p.date_scout})
+                    <div style="margin-top:10px;">
+                        <button onclick="openProject('${p.id}')">Открыть</button>
+                        <span class="trash-badge" onclick="updateStatus('${p.id}', 'trash')"> В корзину</span>
+                    </div>
+                </div>
+            `).join('') : '<p>Проектов пока нет</p>';
+        }
+
+        function createNewProject() {
+            currentProjectId = null;
+            blocks = [];
+            document.getElementById('projTitle').value = '';
+            document.getElementById('blocksContainer').innerHTML = '';
+            document.getElementById('editor').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+
+        function addLocation() {
+            blocks.push({ type: 'location', name: 'Дом', duration: 30, mapLink: '', coords: '' });
+            renderBlocks();
+        }
+
+        function addTransfer() {
+            blocks.push({ type: 'transfer', duration: 40 });
+            renderBlocks();
+        }
+
+        function renderBlocks() {
+            const container = document.getElementById('blocksContainer');
+            container.innerHTML = '';
+            blocks.forEach((b, i) => {
+                if (b.type === 'location') {
+                    container.innerHTML += `
+                        <div class="card">
+                            <label>Локация ${i+1}</label>
+                            <input type="text" placeholder="Название" value="${b.name}" oninput="blocks[${i}].name=this.value">
+                            <input type="text" placeholder="Координаты" value="${b.coords}" oninput="blocks[${i}].coords=this.value" style="margin-top:5px;">
+                            <input type="number" placeholder="Мин. осмотра" value="${b.duration}" oninput="blocks[${i}].duration=parseInt(this.value); calculateTime();" style="margin-top:5px;">
+                        </div>`;
+                } else {
+                    container.innerHTML += `
+                        <div class="transfer">
+                            🚗 Переезд ~ <input type="number" value="${b.duration}" oninput="blocks[${i}].duration=parseInt(this.value); calculateTime();" style="width:50px;"> мин.
+                        </div>`;
+                }
+            });
+            calculateTime();
+        }
+
+        function calculateTime() {
+            let current = document.getElementById('startTime').value;
+            // Здесь будет логика инкремента времени (для краткости пропустим математику в этом демо)
+        }
+
+        async function saveToCloud() {
+            const title = document.getElementById('projTitle').value;
+            const date = document.getElementById('projDate').value;
+            await supabaseClient.from('projects').upsert({
+                id: currentProjectId || undefined,
+                user_id: userId,
+                title: title,
+                date_scout: date,
+                content: { blocks },
+                status: 'active'
+            });
+            tg.showAlert("Сохранено!");
+            showDashboard();
+        }
+
+        function copyAsText() {
+            let text = `📋 План скаута ${document.getElementById('projDate').value}\n\n`;
+            blocks.forEach((b, i) => {
+                if (b.type === 'location') text += `Локация ${i+1} — ${b.name}\n📍 ${b.coords}\n\n`;
+                else text += `🚗 Переезд ~ ${b.duration} мин.\n\n`;
+            });
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            tg.showAlert("Текст скопирован!");
+        }
+
+        showDashboard();
+    </script>
+</body>
+</html>
