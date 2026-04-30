@@ -24,16 +24,15 @@
         
         .main-input { width: 100%; padding: 16px; border: 1px solid #efefef; border-radius: 14px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; }
         
-        /* Цветовые теги в редакторе */
-        .color-picker { display: flex; gap: 10px; margin-top: 10px; }
-        .color-btn { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: 0.2s; }
-        .color-btn.active { border-color: #000; transform: scale(1.1); }
+        /* Компактный выбор цвета */
+        .color-picker { display: flex; gap: 12px; margin-top: 12px; justify-content: flex-start; }
+        .color-btn { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .color-btn.active { border-color: #000; transform: scale(1.15); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
         .tag-red { background: #ff3b30; } .tag-yellow { background: #ffcc00; }
         .tag-green { background: #34c759; } .tag-gray { background: #8e8e93; }
 
-        /* Теги в списке */
-        .list-tag { font-size: 10px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: inline-block; }
+        .list-tag { font-size: 10px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: inline-block; }
 
         .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #f9f9f9; }
         .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; }
@@ -46,7 +45,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 16:05 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 16:15 (Tbilisi)</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -68,23 +67,26 @@
     </div>
     <div class="container">
         <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 30px; text-align: left;">Что планируем?</h3>
+        
         <div class="input-group">
             <span class="input-label">Название проекта</span>
             <input type="text" id="pTitle" class="main-input" placeholder="Название">
         </div>
-        <div class="input-group">
-            <span class="input-label">Текст тега (коротко)</span>
-            <input type="text" id="pTagText" class="main-input" placeholder="СРОЧНО, КИНО и т.д." maxlength="12">
-            <div class="color-picker">
-                <div class="color-btn tag-red active" onclick="selectColor('#ff3b30', this)"></div>
-                <div class="color-btn tag-yellow" onclick="selectColor('#ffcc00', this)"></div>
-                <div class="color-btn tag-green" onclick="selectColor('#34c759', this)"></div>
-                <div class="color-btn tag-gray" onclick="selectColor('#8e8e93', this)"></div>
-            </div>
-        </div>
+
         <div class="input-group">
             <span class="input-label">Когда</span>
             <input type="text" id="pDate" class="main-input" placeholder="дд.мм" inputmode="numeric" maxlength="5">
+        </div>
+
+        <div class="input-group">
+            <span class="input-label">Тег (текст и цвет)</span>
+            <input type="text" id="pTagText" class="main-input" placeholder="Напр: СРОЧНО" maxlength="12">
+            <div class="color-picker">
+                <div class="color-btn tag-red active" onclick="setTagColor('#ff3b30', this)"></div>
+                <div class="color-btn tag-yellow" onclick="setTagColor('#ffcc00', this)"></div>
+                <div class="color-btn tag-green" onclick="setTagColor('#34c759', this)"></div>
+                <div class="color-btn tag-gray" onclick="setTagColor('#8e8e93', this)"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -144,7 +146,7 @@
     let currentEditId = null;
     let selectedColor = '#ff3b30';
 
-    function selectColor(color, el) {
+    function setTagColor(color, el) {
         selectedColor = color;
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
@@ -179,7 +181,7 @@
     function createNewProject() {
         currentEditId = null;
         ['pTitle', 'pDate', 'pAddress', 'pMapUrl', 'pTime', 'pTagText'].forEach(id => document.getElementById(id).value = '');
-        selectColor('#ff3b30', document.querySelector('.tag-red'));
+        setTagColor('#ff3b30', document.querySelector('.tag-red'));
         showView('editorView');
     }
 
@@ -237,12 +239,11 @@
             document.getElementById('pTime').value = data.meeting_time || '';
             document.getElementById('pTagText').value = data.tag_text || '';
             
-            // Восстановление цвета тега
             if (data.tag_color) {
-                const btn = Array.from(document.querySelectorAll('.color-btn')).find(b => b.style.backgroundColor === data.tag_color || b.classList.contains('tag-red') && data.tag_color === '#ff3b30');
-                if (btn) selectColor(data.tag_color, btn);
+                const colors = {'#ff3b30': '.tag-red', '#ffcc00': '.tag-yellow', '#34c759': '.tag-green', '#8e8e93': '.tag-gray'};
+                const btnClass = colors[data.tag_color];
+                if (btnClass) setTagColor(data.tag_color, document.querySelector(btnClass));
             }
-            
             showView('editorView');
         }
     }
