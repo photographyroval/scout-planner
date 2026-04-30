@@ -24,7 +24,7 @@
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; transition: transform 0.1s; }
         .btn-black:active { transform: scale(0.98); }
-        .btn-black:disabled { background: #ccc; }
+        .btn-black:disabled { background: #ccc; cursor: not-allowed; }
         
         .input-group { margin-bottom: 20px; width: 100%; max-width: 350px; }
         .input-label { font-size: 13px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; text-align: left; }
@@ -54,7 +54,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 18:40 (Fix)</div>
+<div class="version-tag">v. 30.04 19:10 (Debug Save)</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -88,7 +88,7 @@
         <div class="input-group">
             <span class="input-label">Тег</span>
             <input type="text" id="pTagText" class="main-input" placeholder="Напр: СРОЧНО" maxlength="12">
-            <div class="color-picker" id="colorPickerUI">
+            <div class="color-picker">
                 <div class="color-btn tag-red active" data-color="#ff3b30" onclick="setTagColor('#ff3b30', this)"></div>
                 <div class="color-btn tag-yellow" data-color="#ffcc00" onclick="setTagColor('#ffcc00', this)"></div>
                 <div class="color-btn tag-green" data-color="#34c759" onclick="setTagColor('#34c759', this)"></div>
@@ -101,7 +101,7 @@
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" id="btnSaveLocation" onclick="saveAndGoToPlan()" style="color: #34c759;">Сохранить и далее</button>
+        <button class="nav-btn" id="btnSaveStep1" onclick="saveStepOne()" style="color: #34c759;">Сохранить и далее</button>
     </div>
     <div class="container">
         <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 20px;">Сбор</h3>
@@ -187,11 +187,7 @@
                 if (hh && parseInt(hh) > 23) hh = '23';
                 if (mm && parseInt(mm) > 59) mm = '59';
                 e.target.value = hh + (mm.length > 0 ? ':' + mm : '');
-                e.target.style.color = e.target.value.length > 0 ? '#000' : '#999';
             };
-        });
-        document.querySelectorAll('.coord-mask').forEach(el => {
-            el.oninput = (e) => e.target.value = e.target.value.replace(/[^0-9., ]/g, '');
         });
     }
 
@@ -200,6 +196,47 @@
         document.getElementById(v).classList.remove('hidden');
         if (v === 'mainView') loadProjects();
         initMasks();
+    }
+
+    async function saveStepOne() {
+        const btn = document.getElementById('btnSaveStep1');
+        const title = document.getElementById('pTitle').value.trim();
+        if (!title) return alert("Введите название проекта");
+
+        btn.disabled = true;
+        btn.innerText = '⏳...';
+
+        const row = {
+            user_id: uid,
+            title: title,
+            date_scout: document.getElementById('pDate').value || '',
+            tag_text: document.getElementById('pTagText').value || '',
+            tag_color: selectedColor,
+            meeting_time: document.getElementById('pTime').value || '',
+            exit_time: document.getElementById('pExitTime').value || '',
+            location_address: document.getElementById('pAddress').value || '',
+            map_url: document.getElementById('pMapUrl').value || '',
+            coords: document.getElementById('pCoords').value || '',
+            status: 'active'
+        };
+
+        if (currentEditId) row.id = currentEditId;
+
+        try {
+            const { data, error } = await client.from('projects').upsert(row).select();
+            if (error) throw error;
+            
+            if (data && data[0]) {
+                currentEditId = data[0].id;
+                showView('planView');
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка сохранения: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Сохранить и далее';
+        }
     }
 
     function addLocationBlock(data = null) {
@@ -235,66 +272,18 @@
     function removeLocation(id) { locations = locations.filter(l => l.id !== id); renderLocations(); }
     function updateLoc(id, field, value) { const loc = locations.find(l => l.id === id); if (loc) loc[field] = value; }
 
-    async function saveAndGoToPlan() {
-        const btn = document.getElementById('btnSaveLocation');
-        const title = document.getElementById('pTitle').value.trim();
-        if (!title) return alert("Введите название");
-
-        btn.innerText = 'Сохранение...';
-        btn.disabled = true;
-
-        const payload = {
-            user_id: uid,
-            title: title,
-            date_scout: document.getElementById('pDate').value,
-            tag_text: document.getElementById('pTagText').value,
-            tag_color: selectedColor,
-            meeting_time: document.getElementById('pTime').value,
-            exit_time: document.getElementById('pExitTime').value,
-            location_address: document.getElementById('pAddress').value,
-            map_url: document.getElementById('pMapUrl').value,
-            coords: document.getElementById('pCoords').value,
-            status: 'active'
-        };
-
-        try {
-            let res;
-            if (currentEditId) {
-                res = await client.from('projects').update(payload).eq('id', currentEditId).select();
-            } else {
-                res = await client.from('projects').insert([payload]).select();
-            }
-
-            if (res.error) throw res.error;
-            
-            currentEditId = res.data[0].id;
-            showView('planView');
-        } catch (e) {
-            console.error("Save error:", e);
-            alert("Ошибка БД: " + e.message);
-        } finally {
-            btn.innerText = 'Сохранить и далее';
-            btn.disabled = false;
-        }
-    }
-
     async function finalSaveAll() {
         const btn = document.getElementById('btnFinalSave');
-        btn.innerText = 'Сохранение...';
         btn.disabled = true;
-
         try {
-            const { error } = await client.from('projects').update({
+            await client.from('projects').update({
                 travel_time: document.getElementById('pTravelTime').value,
                 plan_data: locations
             }).eq('id', currentEditId);
-            
-            if (error) throw error;
             showView('mainView');
         } catch (e) {
-            alert("Ошибка сохранения: " + e.message);
+            alert("Ошибка: " + e.message);
         } finally {
-            btn.innerText = 'Финальное сохранение';
             btn.disabled = false;
         }
     }
