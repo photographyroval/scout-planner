@@ -9,50 +9,50 @@
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; text-align: center; }
         h2 { font-size: 22px; margin: 10px 0; font-weight: 800; }
         
-        /* Фиксированная верхняя панель */
-        .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding-bottom: 10px; border-bottom: 1px solid #f9f9f9; }
+        .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding-bottom: 10px; border-bottom: 1px solid #f2f2f2; }
         
-        .tabs { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 10px 0 20px; height: 60px; }
+        .tabs { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 10px 0 15px; height: 55px; }
         .tab { 
             font-size: 13px; font-weight: 600; cursor: pointer; color: #999; padding: 8px 14px; border-radius: 12px; 
             border: 2px solid transparent; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; gap: 5px;
+            display: flex; align-items: center; gap: 5px; background: #fdfdfd;
         }
-        .tab.active { transform: scale(1.15); color: #000; }
+        .tab.active { transform: scale(1.1); color: #000; background: #fff; }
         #t-active.active { border-color: #34c759; color: #34c759; }
         #t-hidden.active { border-color: #8e8e93; color: #8e8e93; }
         #t-trash.active { border-color: #ff3b30; color: #ff3b30; }
 
-        /* Карточка с поддержкой выбора */
         .project-card { 
-            border: 1px solid #eee; border-radius: 14px; padding: 15px; margin-bottom: 12px; 
-            display: flex; align-items: center; gap: 12px; transition: all 0.2s;
+            border: 1px solid #eee; border-radius: 16px; padding: 16px; margin-bottom: 12px; 
+            display: flex; align-items: center; gap: 12px; transition: all 0.2s ease; position: relative;
         }
-        .project-card.selected { border-color: #007aff; background: #f0f7ff; }
+        .project-card.selected { border-color: #007aff; background: #f0f7ff; transform: scale(0.98); }
         
-        .checkbox { 
-            width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 6px; 
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        .check-circle { 
+            width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s;
         }
-        .selected .checkbox { background: #007aff; border-color: #007aff; }
-        .selected .checkbox::after { content: '✓'; color: #fff; font-size: 14px; }
+        .selected .check-circle { background: #007aff; border-color: #007aff; }
+        .selected .check-circle::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 900; }
 
         .project-info { flex: 1; text-align: left; cursor: pointer; }
-        .project-title { font-weight: 800; font-size: 17px; }
+        .project-title { font-weight: 800; font-size: 18px; margin-bottom: 2px; }
         
-        /* Нижняя панель действий */
         .action-bar { 
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
-            background: #000; color: #fff; padding: 12px 20px; border-radius: 20px;
-            display: flex; gap: 20px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+            background: #1c1c1e; color: #fff; padding: 12px 24px; border-radius: 25px;
+            display: flex; align-items: center; gap: 20px; z-index: 2000; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            font-size: 14px; font-weight: 600;
         }
+        .action-btn { cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: 0.2s; }
+        .action-btn:active { background: rgba(255,255,255,0.1); }
 
-        .btn { background: #000; color: #fff; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: 700; font-size: 15px; cursor: pointer; }
+        .btn-main { background: #000; color: #fff; border: none; padding: 14px; border-radius: 14px; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer; }
+        .tag-pill { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #fff; margin-right: 4px; display: inline-block; text-transform: uppercase; }
+        .tag-gray { background: #8e8e93; } .tag-red { background: #ff3b30; } .tag-green { background: #34c759; } .tag-blue { background: #007aff; } .tag-yellow { background: #ffcc00; color: #000; }
+
         .hidden { display: none !important; }
-        .dots-btn { font-size: 20px; color: #ccc; padding: 5px; }
-        
-        .eye-sym { display: none; }
-        #t-hidden.active .eye-sym { display: inline; }
+        .edit-icon { font-size: 18px; color: #ccc; padding: 5px; }
     </style>
 </head>
 <body>
@@ -62,26 +62,34 @@
         <h2>Мои Проекты</h2>
         <div class="tabs">
             <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
-            <div id="t-hidden" class="tab" onclick="switchTab('hidden')"><span class="eye-sym">🙈</span> Скрытые</div>
+            <div id="t-hidden" class="tab" onclick="switchTab('hidden')">🙈 Скрытые</div>
             <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
         </div>
-        <button id="addBtn" class="btn" onclick="createNewProject()">+ Создать план</button>
+        <button id="addBtn" class="btn-main" onclick="createNewProject()">+ Создать план</button>
     </div>
 
-    <div id="projectList" style="margin-top: 20px;"></div>
+    <div id="projectList" style="margin-top: 15px; padding-bottom: 100px;"></div>
 </div>
 
-<!-- Панель массовых действий -->
 <div id="multiAction" class="action-bar hidden">
-    <span id="selectCount" style="margin-right: 10px; font-weight: 800;">0</span>
-    <span onclick="bulkStatus('active')" id="btnRestore" class="hidden">📦 В активные</span>
-    <span onclick="bulkStatus('hidden')" id="btnHide">🙈 Скрыть</span>
-    <span onclick="bulkStatus('trash')" style="color: #ff3b30;">🗑 Удалить</span>
+    <span id="selectCount" style="color: #007aff; font-size: 18px;">0</span>
+    <div style="width: 1px; height: 20px; background: #444;"></div>
+    <span id="actRestore" class="action-btn" onclick="bulkUpdate('active')">📦 В актив</span>
+    <span id="actHide" class="action-btn" onclick="bulkUpdate('hidden')">🙈 Скрыть</span>
+    <span id="actTrash" class="action-btn" style="color: #ff453a;" onclick="bulkUpdate('trash')">🗑 Удалить</span>
 </div>
 
-<!-- Редактор (без изменений) -->
-<div id="editorView" class="hidden">
-    <!-- ... (код редактора из прошлых сообщений) ... -->
+<!-- Редактор -->
+<div id="editorView" class="hidden" style="padding: 20px; text-align: left;">
+    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 30px;">
+        <button onclick="closeEditor()" style="background:none; border:none; font-size:16px; color:#666;">Отмена</button>
+        <button onclick="saveProject()" style="background:none; border:none; font-weight:800; font-size:16px; color:#007aff;">Готово</button>
+    </div>
+    <h3 id="editHeader" style="font-weight: 800; margin-bottom: 20px;">Новый проект</h3>
+    <input type="text" id="pTitle" style="width:100%; padding:15px; border:1px solid #eee; border-radius:12px; margin-bottom:15px; font-size:18px; font-weight:700;" placeholder="Название">
+    <input type="text" id="pDate" style="width:100%; padding:15px; border:1px solid #eee; border-radius:12px; margin-bottom:15px;" placeholder="Дата съемки">
+    <div id="tempTags" style="margin-bottom: 15px;"></div>
+    <!-- Добавление тегов можно вернуть сюда при необходимости -->
 </div>
 
 <script>
@@ -92,54 +100,60 @@
     
     let currentTab = 'active';
     let selectedIds = new Set();
+    let currentEditId = null;
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
     async function loadProjects() {
-        const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('is_pinned', {ascending: false}).order('created_at', {ascending: false});
+        const { data } = await client.from('projects')
+            .select('*')
+            .eq('user_id', uid)
+            .eq('status', currentTab)
+            .order('created_at', {ascending: false});
+
         const list = document.getElementById('projectList');
-        
         list.innerHTML = data.map(p => `
             <div class="project-card ${selectedIds.has(p.id) ? 'selected' : ''}" id="card-${p.id}" onclick="toggleSelect('${p.id}')">
-                <div class="checkbox"></div>
+                <div class="check-circle"></div>
                 <div class="project-info">
-                    <div class="project-title">${p.is_pinned ? '📌 ' : ''}${p.title}</div>
-                    <div style="font-size:13px; color:#888">🗓 ${p.date_scout || '-'}</div>
+                    <div class="project-title">${p.title}</div>
+                    <div style="font-size:13px; color:#888">🗓 ${p.date_scout || 'Дата не указана'}</div>
+                    <div style="margin-top:6px;">${(p.tags || []).map(t => {
+                        const [n, c] = t.split(':');
+                        return `<span class="tag-pill tag-${c}">${n}</span>`;
+                    }).join('')}</div>
                 </div>
-                <div class="dots-btn" onclick="event.stopPropagation(); openProject('${p.id}')">✎</div>
+                <div class="edit-icon" onclick="event.stopPropagation(); openEdit('${p.id}')">✎</div>
             </div>
-        `).join('') || '<p style="color:#999; margin-top:40px;">Нет проектов</p>';
+        `).join('') || `<p style="color:#bbb; margin-top:60px;">${currentTab === 'trash' ? 'Корзина пуста' : 'Нет проектов'}</p>`;
     }
 
     function toggleSelect(id) {
         if (selectedIds.has(id)) selectedIds.delete(id);
         else selectedIds.add(id);
         
-        const card = document.getElementById(`card-${id}`);
-        card.classList.toggle('selected');
+        document.getElementById(`card-${id}`).classList.toggle('selected');
         updateActionBar();
     }
 
     function updateActionBar() {
         const bar = document.getElementById('multiAction');
         const count = document.getElementById('selectCount');
-        const btnRestore = document.getElementById('btnRestore');
-        const btnHide = document.getElementById('btnHide');
-
+        
         if (selectedIds.size > 0) {
             bar.classList.remove('hidden');
             count.innerText = selectedIds.size;
             
-            // Настройка кнопок в зависимости от вкладки
-            btnRestore.classList.toggle('hidden', currentTab === 'active');
-            btnHide.classList.toggle('hidden', currentTab === 'hidden' || currentTab === 'trash');
+            // Логика кнопок
+            document.getElementById('actRestore').classList.toggle('hidden', currentTab === 'active');
+            document.getElementById('actHide').classList.toggle('hidden', currentTab !== 'active');
         } else {
             bar.classList.add('hidden');
         }
     }
 
-    async function bulkStatus(newStatus) {
+    async function bulkUpdate(newStatus) {
         const ids = Array.from(selectedIds);
-        await client.from('projects').update({ status: newStatus, is_pinned: false }).in('id', ids);
+        await client.from('projects').update({ status: newStatus }).in('id', ids);
         selectedIds.clear();
         updateActionBar();
         loadProjects();
@@ -153,21 +167,55 @@
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById('t-'+t).classList.add('active');
         
-        // Кнопка создания видна только в активных
+        // Кнопка создать — только в Активных
         document.getElementById('addBtn').classList.toggle('hidden', t !== 'active');
-        
         loadProjects();
     }
 
-    // Вспомогательные функции для создания/редактирования
+    // Редактор
     function createNewProject() {
-        // Логика открытия редактора для НОВОГО проекта
-        // ... (используй функцию из предыдущего кода)
+        currentEditId = null;
+        document.getElementById('pTitle').value = '';
+        document.getElementById('pDate').value = '';
+        document.getElementById('editHeader').innerText = 'Новый проект';
+        showView('editorView');
     }
 
-    async function openProject(id) {
-        // Логика открытия редактора для существующего проекта
-        // ... (используй функцию из предыдущего кода)
+    async function openEdit(id) {
+        const { data } = await client.from('projects').select('*').eq('id', id).single();
+        currentEditId = data.id;
+        document.getElementById('pTitle').value = data.title;
+        document.getElementById('pDate').value = data.date_scout || '';
+        document.getElementById('editHeader').innerText = 'Редактирование';
+        showView('editorView');
+    }
+
+    async function saveProject() {
+        const title = document.getElementById('pTitle').value || "Без названия";
+        const date = document.getElementById('pDate').value;
+        
+        const payload = {
+            user_id: uid,
+            title: title,
+            date_scout: date,
+            status: 'active' // Всегда активный при создании/правке
+        };
+
+        if (currentEditId) payload.id = currentEditId;
+
+        await client.from('projects').upsert(payload);
+        closeEditor();
+    }
+
+    function showView(v) {
+        document.getElementById('mainView').classList.add('hidden');
+        document.getElementById('editorView').classList.add('hidden');
+        document.getElementById(v).classList.remove('hidden');
+    }
+
+    function closeEditor() {
+        showView('mainView');
+        loadProjects();
     }
 
     loadProjects();
