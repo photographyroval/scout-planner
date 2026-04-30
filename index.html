@@ -6,44 +6,36 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --tg-theme-button-color: #2481cc; }
-        body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; }
+        body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; text-align: center; }
+        h2 { font-size: 24px; margin: 10px 0 20px; }
         
-        /* Заголовки */
-        h2 { text-align: center; font-size: 24px; margin-top: 10px; }
-        
+        /* Вкладки */
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .tab { font-size: 14px; font-weight: 600; cursor: pointer; color: #999; padding: 5px 10px; border-radius: 8px; }
+        .tab.active { color: #000; background: #f0f0f0; }
+
         /* Карточка проекта */
-        .project-card { background: #fff; border: 1px solid #eee; border-radius: 14px; padding: 18px; margin-bottom: 15px; position: relative; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .project-info { flex: 1; text-align: center; cursor: pointer; }
-        .project-title { font-weight: 800; font-size: 20px; margin-bottom: 6px; }
-        .project-meta { font-size: 15px; color: #444; font-weight: 600; }
+        .project-card { border: 1px solid #eee; border-radius: 14px; padding: 18px; margin-bottom: 15px; position: relative; display: flex; justify-content: space-between; align-items: center; }
+        .project-info { flex: 1; cursor: pointer; }
+        .project-title { font-weight: 800; font-size: 20px; margin-bottom: 4px; }
+        .project-meta { font-size: 15px; font-weight: 700; }
         
         /* Теги */
-        .tag-container { margin-top: 8px; display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; }
-        .tag-pill { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #fff; background: #8e8e93; }
-        
-        /* Цвета тегов */
-        .tag-red { background: #ff3b30; }
-        .tag-green { background: #34c759; }
-        .tag-yellow { background: #ffcc00; color: #000; }
-        .tag-blue { background: #007aff; }
+        .tag-pill { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; margin: 2px; display: inline-block; }
+        .tag-gray { background: #8e8e93; } .tag-red { background: #ff3b30; } .tag-green { background: #34c759; } .tag-blue { background: #007aff; } .tag-yellow { background: #ffcc00; color: #000; }
 
-        /* Вкладки */
-        .tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .tab { font-size: 16px; font-weight: 600; cursor: pointer; color: #999; padding-bottom: 5px; }
-        .tab.active { color: #000; border-bottom: 2px solid #000; }
+        /* Выбор цвета в редакторе */
+        .color-picker { display: flex; justify-content: center; gap: 10px; margin: 10px 0 20px; }
+        .color-opt { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+        .color-opt.selected { border-color: #000; }
 
-        .btn { background: #000; color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn { background: #000; color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; font-size: 16px; margin-top: 10px; }
+        .editor-input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; text-align: center; outline: none; }
         .hidden { display: none; }
         
-        /* Редактор */
-        .editor-input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; text-align: center; }
-        label { font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 6px; display: block; text-align: center; font-weight: bold; }
-        .dots-btn { font-size: 24px; color: #ccc; padding-left: 10px; }
-        
-        /* Контекстное меню */
-        .context-menu { position: absolute; right: 10px; top: 50px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 100; overflow: hidden; }
-        .menu-item { padding: 14px 20px; font-size: 15px; border-bottom: 1px solid #f5f5f5; }
+        .dots-btn { font-size: 24px; color: #ccc; padding: 0 10px; cursor: pointer; }
+        .context-menu { position: absolute; right: 10px; top: 50px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100; text-align: left; overflow: hidden; }
+        .menu-item { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -51,31 +43,35 @@
 <div id="mainView">
     <h2>Проекты</h2>
     <div class="tabs">
-        <div id="tabActive" class="tab active" onclick="switchTab('active')">Активные</div>
-        <div id="tabTrash" class="tab" onclick="switchTab('trash')">Корзина</div>
+        <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
+        <div id="t-hidden" class="tab" onclick="switchTab('hidden')">Скрытые</div>
+        <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
     </div>
-
     <div id="projectList"></div>
     <button id="addBtn" class="btn" onclick="createNewProject()">+ Создать план</button>
 </div>
 
 <div id="editorView" class="hidden">
-    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 25px;">
-        <button onclick="closeEditor()" style="background:none; border:none; color:#000; font-size:17px;">↩ Отмена</button>
-        <button onclick="saveProject()" style="background:none; border:none; color:#2481cc; font-weight:800; font-size:17px;">Готово</button>
+    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
+        <button onclick="closeEditor()" style="background:none; border:none; font-size:16px;">Отмена</button>
+        <button onclick="saveProject()" style="background:none; border:none; font-weight:800; font-size:16px; color:#2481cc;">Готово</button>
     </div>
     
-    <label>Название проекта</label>
-    <input type="text" id="pTitle" class="editor-input" placeholder="Введите название">
+    <input type="text" id="pTitle" class="editor-input" placeholder="Название проекта">
+    <input type="text" id="pDate" class="editor-input" placeholder="Дата (напр: 15 мая)">
     
-    <label>Дата съемки</label>
-    <input type="text" id="pDate" class="editor-input" placeholder="Напр: 15 мая">
-    
-    <label>Теги и цвета</label>
-    <input type="text" id="pTags" class="editor-input" placeholder="клип:red, город:blue">
-    <p style="font-size: 11px; color: #999; text-align: center;">Пример: <b>Реклама:green</b></p>
-    
-    <div id="blocks"></div>
+    <div style="border: 1px solid #eee; padding: 15px; border-radius: 12px;">
+        <input type="text" id="tagInput" class="editor-input" style="margin-bottom:10px;" placeholder="Текст тега">
+        <div class="color-picker">
+            <div class="color-opt tag-gray" onclick="selectColor('gray', this)"></div>
+            <div class="color-opt tag-red" onclick="selectColor('red', this)"></div>
+            <div class="color-opt tag-green" onclick="selectColor('green', this)"></div>
+            <div class="color-opt tag-blue" onclick="selectColor('blue', this)"></div>
+            <div class="color-opt tag-yellow" onclick="selectColor('yellow', this)"></div>
+        </div>
+        <button class="btn" style="background:#f0f0f0; color:#000; font-size:13px; padding:8px;" onclick="addTagToList()">+ Добавить тег</button>
+        <div id="tempTags" style="margin-top:10px;"></div>
+    </div>
 </div>
 
 <script>
@@ -86,109 +82,110 @@
     
     let currentId = null;
     let currentTab = 'active';
+    let selectedColor = 'gray';
+    let tempTags = [];
     let openMenuId = null;
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
     async function loadProjects() {
         const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('is_pinned', {ascending: false}).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
-        
-        list.innerHTML = data.map(p => {
-            const tagsHtml = (p.tags || []).map(t => {
-                const [name, color] = t.split(':');
-                const colorClass = color ? `tag-${color.toLowerCase()}` : '';
-                return `<span class="tag-pill ${colorClass}">${name}</span>`;
-            }).join('');
-
-            return `
+        list.innerHTML = data.map(p => `
             <div class="project-card">
                 <div class="project-info" onclick="openProject('${p.id}')">
-                    <div class="project-title">
-                        ${p.is_pinned ? '📌 ' : ''}${p.title}
-                    </div>
-                    <div class="project-meta">🗓 <b>${p.date_scout || 'Дата не указана'}</b></div>
-                    <div class="tag-container">${tagsHtml}</div>
+                    <div class="project-title">${p.is_pinned ? '📌 ' : ''}${p.title}</div>
+                    <div class="project-meta">🗓 <b>${p.date_scout || '-'}</b></div>
+                    <div style="margin-top:5px;">${(p.tags || []).map(t => {
+                        const [n, c] = t.split(':');
+                        return `<span class="tag-pill tag-${c || 'gray'}">${n}</span>`;
+                    }).join('')}</div>
                 </div>
                 <div class="dots-btn" onclick="toggleMenu(event, '${p.id}')">⋮</div>
                 <div id="menu-${p.id}" class="context-menu hidden">
-                    ${currentTab === 'active' ? `
-                        <div class="menu-item" onclick="togglePin('${p.id}', ${p.is_pinned})">${p.is_pinned ? '📍 Открепить' : '📍 Закрепить'}</div>
-                        <div class="menu-item" style="color:red" onclick="updateStatus('${p.id}', 'trash')">🗑 В корзину</div>
-                    ` : `
-                        <div class="menu-item" onclick="updateStatus('${p.id}', 'active')">♻️ Восстановить</div>
-                        <div class="menu-item" style="color:red; font-weight:bold" onclick="deleteForever('${p.id}')">❌ Удалить навсегда</div>
-                    `}
+                    ${currentTab === 'active' ? `<div class="menu-item" onclick="updateStatus('${p.id}', 'hidden')">🔒 Скрыть</div>` : ''}
+                    ${currentTab === 'hidden' ? `<div class="menu-item" onclick="updateStatus('${p.id}', 'active')">🔓 Показать</div>` : ''}
+                    <div class="menu-item" onclick="togglePin('${p.id}', ${p.is_pinned})">${p.is_pinned ? '📍 Открепить' : '📍 Закрепить'}</div>
+                    <div class="menu-item" style="color:red" onclick="updateStatus('${p.id}', 'trash')">🗑 В корзину</div>
                 </div>
             </div>
-            `;
-        }).join('') || '<p style="text-align:center; color:#999; margin-top:50px;">Список пуст</p>';
+        `).join('') || '<p style="color:#999; margin-top:40px;">Пусто</p>';
     }
 
-    function toggleMenu(e, id) {
-        e.stopPropagation();
-        if (openMenuId && openMenuId !== id) document.getElementById('menu-'+openMenuId).classList.add('hidden');
-        const menu = document.getElementById('menu-'+id);
-        menu.classList.toggle('hidden');
-        openMenuId = menu.classList.contains('hidden') ? null : id;
+    function selectColor(c, el) {
+        selectedColor = c;
+        document.querySelectorAll('.color-opt').forEach(opt => opt.classList.remove('selected'));
+        el.classList.add('selected');
     }
 
-    async function togglePin(id, current) {
-        await client.from('projects').update({ is_pinned: !current }).eq('id', id);
-        loadProjects();
-    }
-
-    async function updateStatus(id, status) {
-        await client.from('projects').update({ status: status, is_pinned: false }).eq('id', id);
-        loadProjects();
-    }
-
-    async function deleteForever(id) {
-        if(confirm("Это действие нельзя отменить. Удалить?")) {
-            await client.from('projects').delete().eq('id', id);
-            loadProjects();
+    function addTagToList() {
+        const val = document.getElementById('tagInput').value.trim();
+        if(val) {
+            tempTags.push(`${val}:${selectedColor}`);
+            document.getElementById('tagInput').value = '';
+            renderTempTags();
         }
     }
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.getElementById('tabActive').classList.toggle('active', tab === 'active');
-        document.getElementById('tabTrash').classList.toggle('active', tab === 'trash');
-        document.getElementById('addBtn').classList.toggle('hidden', tab === 'trash');
+    function renderTempTags() {
+        document.getElementById('tempTags').innerHTML = tempTags.map((t, i) => {
+            const [n, c] = t.split(':');
+            return `<span class="tag-pill tag-${c}" onclick="tempTags.splice(${i},1);renderTempTags()">${n} ×</span>`;
+        }).join('');
+    }
+
+    async function updateStatus(id, s) {
+        await client.from('projects').update({ status: s, is_pinned: false }).eq('id', id);
+        loadProjects();
+    }
+
+    async function togglePin(id, p) {
+        await client.from('projects').update({ is_pinned: !p }).eq('id', id);
+        loadProjects();
+    }
+
+    function switchTab(t) {
+        currentTab = t;
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('t-'+t).classList.add('active');
         loadProjects();
     }
 
     function createNewProject() {
-        currentId = null;
-        document.getElementById('pTitle').value = '';
-        document.getElementById('pDate').value = '';
-        document.getElementById('pTags').value = '';
+        currentId = null; tempTags = [];
+        document.getElementById('pTitle').value = ''; document.getElementById('pDate').value = '';
+        renderTempTags();
         document.getElementById('mainView').classList.add('hidden');
         document.getElementById('editorView').classList.remove('hidden');
     }
 
     async function openProject(id) {
-        if (currentTab === 'trash') return;
+        if(currentTab === 'trash') return;
         const { data } = await client.from('projects').select('*').eq('id', id).single();
-        currentId = data.id;
+        currentId = data.id; tempTags = data.tags || [];
         document.getElementById('pTitle').value = data.title;
         document.getElementById('pDate').value = data.date_scout || '';
-        document.getElementById('pTags').value = (data.tags || []).join(', ');
+        renderTempTags();
         document.getElementById('mainView').classList.add('hidden');
         document.getElementById('editorView').classList.remove('hidden');
     }
 
     async function saveProject() {
-        const rawTags = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(t => t !== "");
         await client.from('projects').upsert({
             id: currentId || undefined,
             user_id: uid,
             title: document.getElementById('pTitle').value || "Без названия",
             date_scout: document.getElementById('pDate').value,
-            tags: rawTags,
-            status: 'active',
-            content: { blocks: [] } 
+            tags: tempTags,
+            status: 'active'
         });
         closeEditor();
+    }
+
+    function toggleMenu(e, id) {
+        e.stopPropagation();
+        const m = document.getElementById('menu-'+id);
+        m.classList.toggle('hidden');
+        openMenuId = id;
     }
 
     function closeEditor() {
@@ -197,13 +194,7 @@
         loadProjects();
     }
 
-    window.onclick = () => {
-        if (openMenuId) {
-            document.getElementById('menu-'+openMenuId).classList.add('hidden');
-            openMenuId = null;
-        }
-    };
-
+    window.onclick = () => { if(openMenuId) document.getElementById('menu-'+openMenuId).classList.add('hidden'); };
     loadProjects();
 </script>
 </body>
