@@ -99,7 +99,7 @@
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="saveAndGoToPlan()" style="color: #34c759;">Сохранить и далее</button>
+        <button class="nav-btn" onclick="()" style="color: #34c759;">Сохранить и далее</button>
     </div>
     <div class="container">
         <h3 style="font-size: 24px; font-weight: 800; width: 100%;">Сбор</h3>
@@ -198,21 +198,35 @@
     }
 
     async function saveAndGoToPlan() {
-        const title = document.getElementById('pTitle').value.trim();
-        if (!title) return alert("Введите название проекта");
+    const title = document.getElementById('pTitle').value.trim();
+    if (!title) return alert("Введите название");
 
-        const payload = {
-            user_id: uid,
-            title: title,
-            date_scout: document.getElementById('pDate').value,
-            tag_text: document.getElementById('pTagText').value,
-            tag_color: selectedColor,
-            meeting_time: document.getElementById('pTime').value,
-            exit_time: document.getElementById('pExitTime').value,
-            location_address: document.getElementById('pAddress').value,
-            coords: document.getElementById('pCoords').value,
-            status: 'active'
-        };
+    const additionalData = {
+        meeting_time: document.getElementById('pTime').value,
+        exit_time: document.getElementById('pExitTime').value,
+        location_address: document.getElementById('pAddress').value,
+        coords: document.getElementById('pCoords').value,
+        tag_color: selectedColor, 
+        locations: locations     
+    };
+
+    const payload = {
+        user_id: uid,
+        title: title,
+        date_scout: document.getElementById('pDate').value,
+        tags: document.getElementById('pTagText').value, // Записываем в tags
+        content: additionalData,                       // Записываем в content
+        status: 'active'
+    };
+
+    const { data, error } = await client
+        .from('projects')
+        .upsert({ id: currentEditId || undefined, ...payload })
+        .select();
+    
+    if (error) alert("Ошибка: " + error.message);
+    else { currentEditId = data[0].id; showView('planView'); }
+};
 
         const { data, error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload }).select();
         
@@ -225,13 +239,23 @@
     }
 
     async function finalSaveAll() {
-        const { error } = await client.from('projects').update({
-            plan_data: locations
-        }).eq('id', currentEditId);
-        
-        if (!error) showView('mainView');
-        else alert("Ошибка финального сохранения");
-    }
+    const updatedContent = {
+        meeting_time: document.getElementById('pTime').value,
+        exit_time: document.getElementById('pExitTime').value,
+        location_address: document.getElementById('pAddress').value,
+        coords: document.getElementById('pCoords').value,
+        tag_color: selectedColor,
+        locations: locations 
+    };
+
+    const { error } = await client
+        .from('projects')
+        .update({ content: updatedContent })
+        .eq('id', currentEditId);
+    
+    if (!error) showView('mainView');
+    else alert("Ошибка сохранения: " + error.message);
+}
 
     function addLocationBlock() {
         locations.push({ id: Date.now(), name: '', time_start: '' });
@@ -254,22 +278,25 @@
     function updateLoc(id, f, v) { const l = locations.find(x => x.id === id); if(l) l[f] = v; }
 
     async function openEdit(id) {
-        const { data } = await client.from('projects').select('*').eq('id', id).single();
-        if (data) {
-            currentEditId = data.id;
-            document.getElementById('pTitle').value = data.title || '';
-            document.getElementById('pDate').value = data.date_scout || '';
-            document.getElementById('pTagText').value = data.tag_text || '';
-            setTagColor(data.tag_color || '#ff3b30', null);
-            document.getElementById('pTime').value = data.meeting_time || '';
-            document.getElementById('pExitTime').value = data.exit_time || '';
-            document.getElementById('pAddress').value = data.location_address || '';
-            document.getElementById('pCoords').value = data.coords || '';
-            locations = data.plan_data || [];
-            renderLocations();
-            showView('editorView');
-        }
+    const { data } = await client.from('projects').select('*').eq('id', id).single();
+    if (data) {
+        currentEditId = data.id;
+        document.getElementById('pTitle').value = data.title || '';
+        document.getElementById('pDate').value = data.date_scout || '';
+        document.getElementById('pTagText').value = data.tags || ''; // Берем из tags
+        
+        const c = data.content || {}; 
+        setTagColor(c.tag_color || '#ff3b30', null);
+        document.getElementById('pTime').value = c.meeting_time || '';
+        document.getElementById('pExitTime').value = c.exit_time || '';
+        document.getElementById('pAddress').value = c.location_address || '';
+        document.getElementById('pCoords').value = c.coords || '';
+        locations = c.locations || [];
+        
+        renderLocations();
+        showView('editorView');
     }
+}
 
     function createNewProject() {
         currentEditId = null; locations = [];
