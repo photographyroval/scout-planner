@@ -21,13 +21,23 @@
         .tab[data-tab="hidden"].active { background: #8e8e93; color: #fff; }
         .tab[data-tab="trash"].active { background: #ff3b30; color: #fff; }
 
+        .trash-actions { display: none; gap: 10px; width: 100%; max-width: 350px; margin: 0 auto 15px auto; }
+        .trash-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-clear { background: #ff3b30; color: #fff; }
+        .btn-delete-selected { background: #000; color: #fff; display: none; }
+
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; }
         .btn-black:active { opacity: 0.8; transform: scale(0.98); }
         
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; }
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: flex-start; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; }
+        .card-content { flex: 1; padding-right: 30px; }
+        
         .list-tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; display: inline-block; width: fit-content; opacity: 0.9; }
         
+        /* Чекбокс */
+        .card-checkbox { display: none; width: 22px; height: 22px; margin-right: 12px; margin-top: 2px; accent-color: #ff3b30; }
+
         .card-menu-btn { position: absolute; top: 8px; right: 8px; font-size: 20px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #bbb; z-index: 10; }
         .dropdown-menu { position: absolute; top: 40px; right: 10px; background: #fff; border: 1px solid #eee; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 100; display: none; min-width: 160px; overflow: hidden; }
         .dropdown-menu.show { display: block; }
@@ -49,7 +59,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 01.05.4 FINAL</div>
+<div class="version-tag">v. 01.06 TRASH</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -60,6 +70,12 @@
             <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">🙈 Скрытые</div>
             <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">Корзина</div>
         </div>
+        
+        <div id="trashActions" class="trash-actions">
+            <button class="trash-btn btn-clear" onclick="clearTrash(true)">Очистить корзину</button>
+            <button id="deleteSelectedBtn" class="trash-btn btn-delete-selected" onclick="deleteSelected()">Удалить (0)</button>
+        </div>
+
         <button id="addBtn" class="btn-black" onclick="createNewProject()">+ Создать план</button>
     </div>
     <div class="container" id="projectList"></div>
@@ -113,13 +129,53 @@
     let currentTab = 'active';
     let currentEditId = null;
     let locations = [];
+    let selectedIds = new Set();
 
     function switchTab(t) {
         currentTab = t;
+        selectedIds.clear();
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById('t-' + t).classList.add('active');
+        
+        // Показ кнопок управления корзиной
+        document.getElementById('trashActions').style.display = (t === 'trash') ? 'flex' : 'none';
+        document.getElementById('addBtn').style.display = (t === 'active') ? 'block' : 'none';
+        
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         loadProjects();
+    }
+
+    function toggleSelection(id) {
+        if (selectedIds.has(id)) selectedIds.delete(id);
+        else selectedIds.add(id);
+        
+        const btn = document.getElementById('deleteSelectedBtn');
+        btn.style.display = selectedIds.size > 0 ? 'block' : 'none';
+        btn.innerText = `Удалить (${selectedIds.size})`;
+    }
+
+    async function clearTrash(full) {
+        if (!confirm("Внимание! Вы собираетесь навсегда удалить проекты. Это действие нельзя отменить. Продолжить?")) return;
+
+        let query = client.from('projects').delete().eq('user_id', uid).eq('status', 'trash');
+        
+        const { error } = await query;
+        if (!error) {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error'); // Сильная вибрация
+            loadProjects();
+        }
+    }
+
+    async function deleteSelected() {
+        if (selectedIds.size === 0) return;
+        if (!confirm(`Удалить выбранные проекты (${selectedIds.size}) навсегда?`)) return;
+
+        const { error } = await client.from('projects').delete().in('id', Array.from(selectedIds));
+        if (!error) {
+            selectedIds.clear();
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+            loadProjects();
+        }
     }
 
     function toggleMenu(e, id) {
@@ -135,7 +191,7 @@
     async function changeStatus(e, id, newStatus) {
         e.stopPropagation();
         if (newStatus === 'trash') {
-            const confirmed = confirm("Точно отправить проект в корзину?");
+            const confirmed = confirm("Отправить проект в корзину?");
             if (!confirmed) return;
         }
         const { error } = await client.from('projects').update({ status: newStatus }).eq('id', id);
@@ -162,23 +218,33 @@
             if (currentTab === 'trash') statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'active')">🔄 Восстановить</div>`;
 
             return `
-                <div class="project-card" onclick="openEdit('${p.id}')">
+                <div class="project-card" onclick="${currentTab === 'trash' ? `toggleSelection('${p.id}')` : `openEdit('${p.id}')`}">
+                    <input type="checkbox" class="card-checkbox" style="display: ${currentTab === 'trash' ? 'block' : 'none'}" ${selectedIds.has(p.id) ? 'checked' : ''}>
+                    
+                    <div class="card-content">
+                        <div style="font-weight:800; font-size:18px; margin-bottom: 4px; color: #000;">${p.title}</div>
+                        <div style="font-size:13px; color:#666; margin-bottom: 8px; display: flex; gap: 10px;">
+                            <span>🗓 ${p.date_scout || '...'}</span>
+                            <span>🕒 ${startTime} — ${endTime}</span>
+                        </div>
+                        <div style="font-size:12px; color:#999; margin-bottom: 12px;">📍 Локаций: ${locCount}</div>
+                        ${p.tags ? `<div class="list-tag" style="background:${(c.tag_color) || '#8e8e93'}">${p.tags}</div>` : ''}
+                    </div>
+
+                    ${currentTab !== 'trash' ? `
                     <div class="card-menu-btn" onclick="toggleMenu(event, '${p.id}')">⋮</div>
                     <div id="menu-${p.id}" class="dropdown-menu">
                         ${statusBtn}
                         <div class="menu-item" onclick="event.stopPropagation(); alert('PDF скоро будет!')">📄 PDF</div>
-                        ${currentTab !== 'trash' ? `<div class="menu-item delete" onclick="changeStatus(event, '${p.id}', 'trash')">🗑 В корзину</div>` : ''}
+                        <div class="menu-item delete" onclick="changeStatus(event, '${p.id}', 'trash')">🗑 В корзину</div>
                     </div>
-                    <div style="font-weight:800; font-size:18px; margin-bottom: 4px; padding-right: 30px; color: #000;">${p.title}</div>
-                    <div style="font-size:13px; color:#666; margin-bottom: 8px; display: flex; gap: 10px;">
-                        <span>🗓 ${p.date_scout || '...'}</span>
-                        <span>🕒 ${startTime} — ${endTime}</span>
-                    </div>
-                    <div style="font-size:12px; color:#999; margin-bottom: 12px;">📍 Локаций: ${locCount}</div>
-                    ${p.tags ? `<div class="list-tag" style="background:${(c.tag_color) || '#8e8e93'}">${p.tags}</div>` : ''}
+                    ` : ''}
                 </div>
             `;
         }).join('') : '<p style="color:#bbb; margin-top:40px;">Пусто</p>';
+        
+        // Скрываем кнопку удаления выбранных, если корзина пуста или ничего не выбрано
+        document.getElementById('deleteSelectedBtn').style.display = selectedIds.size > 0 ? 'block' : 'none';
     }
 
     async function finalSaveAll() {
