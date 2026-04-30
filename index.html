@@ -24,10 +24,10 @@
         
         .main-input { width: 100%; padding: 16px; border: 1px solid #efefef; border-radius: 14px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; }
         
-        /* Компактный выбор цвета */
-        .color-picker { display: flex; gap: 12px; margin-top: 12px; justify-content: flex-start; }
-        .color-btn { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
-        .color-btn.active { border-color: #000; transform: scale(1.15); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Ультра-компактный выбор цвета */
+        .color-picker { display: flex; gap: 15px; margin-top: 12px; justify-content: flex-start; align-items: center; }
+        .color-btn { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .color-btn.active { border-color: #000; transform: scale(1.2); }
         
         .tag-red { background: #ff3b30; } .tag-yellow { background: #ffcc00; }
         .tag-green { background: #34c759; } .tag-gray { background: #8e8e93; }
@@ -45,7 +45,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 16:15 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 16:20 (Tbilisi)</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -79,7 +79,7 @@
         </div>
 
         <div class="input-group">
-            <span class="input-label">Тег (текст и цвет)</span>
+            <span class="input-label">Тег</span>
             <input type="text" id="pTagText" class="main-input" placeholder="Напр: СРОЧНО" maxlength="12">
             <div class="color-picker">
                 <div class="color-btn tag-red active" onclick="setTagColor('#ff3b30', this)"></div>
@@ -152,7 +152,7 @@
         el.classList.add('active');
     }
 
-    // Валидация даты
+    // Валидация даты (дд.мм)
     document.getElementById('pDate').addEventListener('input', function (e) {
         let v = e.target.value.replace(/\D/g, '');
         if (v.length > 4) v = v.substring(0, 4);
