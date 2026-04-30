@@ -6,57 +6,52 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Базовые стили и сброс */
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10001; pointer-events: none; font-weight: 600; }
         
-        /* Шапка с зафиксированными отступами */
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 25px 20px 15px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
         .reload-btn { position: absolute; left: 15px; top: 28px; background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; filter: grayscale(1); opacity: 0.6; transition: transform 0.2s; }
         .reload-btn:active { transform: rotate(90deg); }
         
         h2 { font-size: 20px; margin: 0 0 20px 0; font-weight: 800; }
         
-        /* Вкладки: Логика увеличения и цвета */
         .tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; align-items: center; height: 50px; }
         .tab { font-size: 13px; font-weight: 700; color: #999; padding: 8px 16px; border-radius: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: #f5f5f5; border: none; }
         
+        /* Цвета вкладок */
         .tab.active { transform: scale(1.15); box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2; }
         .tab[data-tab="active"].active { background: #34c759; color: #fff; }
         .tab[data-tab="hidden"].active { background: #8e8e93; color: #fff; }
         .tab[data-tab="trash"].active { background: #ff3b30; color: #fff; }
 
-        /* Контейнеры и кнопки */
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; transition: transform 0.1s; }
         .btn-black:active { transform: scale(0.98); }
         
-        /* Инпуты и формы */
         .input-group { margin-bottom: 20px; width: 100%; max-width: 350px; }
         .input-label { font-size: 13px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; text-align: left; }
-        .main-input { width: 100%; padding: 16px; border: 1px solid #efefef; border-radius: 14px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; }
-        
-        /* Карточки проектов */
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; transition: transform 0.1s; }
-        .project-card:active { transform: scale(0.97); background: #fafafa; }
-        
-        .list-tag { font-size: 10px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: inline-block; }
-        .hidden { display: none !important; }
-        
-        /* Цвета тегов в редакторе */
+        .main-input { width: 100%; padding: 16px; border: 1px solid #efefef; border-radius: 14px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; color: #000; }
+        .main-input::placeholder { color: #999; font-weight: 400; }
+
         .color-picker { display: flex; gap: 15px; margin-top: 12px; justify-content: flex-start; align-items: center; }
         .color-btn { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; box-sizing: content-box; }
         .color-btn.active { border-color: #000; transform: scale(1.3); }
+        
         .tag-red { background: #ff3b30; } .tag-yellow { background: #ffcc00; }
         .tag-green { background: #34c759; } .tag-gray { background: #8e8e93; }
 
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; transition: transform 0.1s; }
+        .project-card:active { transform: scale(0.97); background: #fafafa; }
+        .list-tag { font-size: 10px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: inline-block; }
+        .hidden { display: none !important; }
+
         .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #f9f9f9; }
-        .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+        .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 16:45 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 16:50 (Tbilisi)</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -72,7 +67,6 @@
     <div class="container" id="projectList"></div>
 </div>
 
-<!-- Редактор (Скрыт по умолчанию) -->
 <div id="editorView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← Отмена</button>
@@ -101,7 +95,6 @@
     </div>
 </div>
 
-<!-- Локация (Скрыт по умолчанию) -->
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
@@ -109,17 +102,25 @@
     </div>
     <div class="container">
         <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 30px; text-align: left;">Сбор</h3>
+        
+        <div class="input-group">
+            <span class="input-label">Время сбора</span>
+            <input type="text" id="pTime" class="main-input" placeholder="чч:мм" inputmode="numeric" maxlength="5" style="color: #999;">
+        </div>
+
         <div class="input-group">
             <span class="input-label">Место сбора (адрес)</span>
             <input type="text" id="pAddress" class="main-input" placeholder="Текст адреса">
         </div>
+
         <div class="input-group">
             <span class="input-label">Ссылка на карту</span>
             <input type="text" id="pMapUrl" class="main-input" placeholder="https://...">
         </div>
+
         <div class="input-group">
-            <span class="input-label">Время сбора</span>
-            <input type="time" id="pTime" class="main-input">
+            <span class="input-label">Координаты</span>
+            <input type="text" id="pCoords" class="main-input" placeholder="41.7125, 44.8271" inputmode="decimal">
         </div>
     </div>
 </div>
@@ -145,14 +146,29 @@
         }
     }
 
-    // Маска для даты
-    document.getElementById('pDate').addEventListener('input', function (e) {
+    // Маски ввода
+    document.getElementById('pDate').addEventListener('input', (e) => {
         let v = e.target.value.replace(/\D/g, '');
         if (v.length > 4) v = v.substring(0, 4);
-        let d = v.substring(0, 2); let m = v.substring(2, 4);
-        if (d !== '' && parseInt(d) > 31) d = '31';
-        if (m !== '' && parseInt(m) > 12) m = '12';
+        let d = v.substring(0, 2), m = v.substring(2, 4);
+        if (d && parseInt(d) > 31) d = '31';
+        if (m && parseInt(m) > 12) m = '12';
         e.target.value = d + (m.length > 0 ? '.' + m : '');
+    });
+
+    const timeInput = document.getElementById('pTime');
+    timeInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 4) v = v.substring(0, 4);
+        let hh = v.substring(0, 2), mm = v.substring(2, 4);
+        if (hh && parseInt(hh) > 23) hh = '23';
+        if (mm && parseInt(mm) > 59) mm = '59';
+        e.target.value = hh + (mm.length > 0 ? ':' + mm : '');
+        timeInput.style.color = e.target.value.length > 0 ? '#000' : '#999';
+    });
+
+    document.getElementById('pCoords').addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9., ]/g, '');
     });
 
     function showView(v) {
@@ -171,7 +187,11 @@
 
     function createNewProject() {
         currentEditId = null;
-        ['pTitle', 'pDate', 'pAddress', 'pMapUrl', 'pTime', 'pTagText'].forEach(id => document.getElementById(id).value = '');
+        ['pTitle', 'pDate', 'pAddress', 'pMapUrl', 'pTime', 'pTagText', 'pCoords'].forEach(id => {
+            const el = document.getElementById(id);
+            el.value = '';
+            if(id === 'pTime') el.style.color = '#999';
+        });
         setTagColor('#ff3b30', null);
         showView('editorView');
     }
@@ -187,7 +207,8 @@
             meeting_time: document.getElementById('pTime').value,
             tag_text: document.getElementById('pTagText').value.toUpperCase(),
             tag_color: selectedColor,
-            status: 'active'
+            status: 'active',
+            coords: document.getElementById('pCoords').value.trim()
         };
         await client.from('projects').upsert({ id: currentEditId || undefined, ...payload });
         showView('mainView');
@@ -216,8 +237,11 @@
             document.getElementById('pDate').value = data.date_scout;
             document.getElementById('pAddress').value = data.location_address || '';
             document.getElementById('pMapUrl').value = data.map_url || '';
-            document.getElementById('pTime').value = data.meeting_time || '';
+            const tInput = document.getElementById('pTime');
+            tInput.value = data.meeting_time || '';
+            tInput.style.color = tInput.value ? '#000' : '#999';
             document.getElementById('pTagText').value = data.tag_text || '';
+            document.getElementById('pCoords').value = data.coords || '';
             setTagColor(data.tag_color || '#ff3b30', null);
             showView('editorView');
         }
