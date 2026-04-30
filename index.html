@@ -24,6 +24,7 @@
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; transition: transform 0.1s; }
         .btn-black:active { transform: scale(0.98); }
+        .btn-black:disabled { background: #ccc; }
         
         .input-group { margin-bottom: 20px; width: 100%; max-width: 350px; }
         .input-label { font-size: 13px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; text-align: left; }
@@ -53,7 +54,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 18:15 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 18:40 (Fix)</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -87,7 +88,7 @@
         <div class="input-group">
             <span class="input-label">Тег</span>
             <input type="text" id="pTagText" class="main-input" placeholder="Напр: СРОЧНО" maxlength="12">
-            <div class="color-picker">
+            <div class="color-picker" id="colorPickerUI">
                 <div class="color-btn tag-red active" data-color="#ff3b30" onclick="setTagColor('#ff3b30', this)"></div>
                 <div class="color-btn tag-yellow" data-color="#ffcc00" onclick="setTagColor('#ffcc00', this)"></div>
                 <div class="color-btn tag-green" data-color="#34c759" onclick="setTagColor('#34c759', this)"></div>
@@ -100,7 +101,7 @@
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="saveAndGoToPlan()" style="color: #34c759;">Сохранить и далее</button>
+        <button class="nav-btn" id="btnSaveLocation" onclick="saveAndGoToPlan()" style="color: #34c759;">Сохранить и далее</button>
     </div>
     <div class="container">
         <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 20px;">Сбор</h3>
@@ -132,7 +133,7 @@
 <div id="planView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('locationView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="finalSaveAll()" style="color: #34c759;">Финальное сохранение</button>
+        <button class="nav-btn" id="btnFinalSave" onclick="finalSaveAll()" style="color: #34c759;">Финальное сохранение</button>
     </div>
     <div class="container">
         <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 20px;">План просмотра</h3>
@@ -235,25 +236,67 @@
     function updateLoc(id, field, value) { const loc = locations.find(l => l.id === id); if (loc) loc[field] = value; }
 
     async function saveAndGoToPlan() {
+        const btn = document.getElementById('btnSaveLocation');
         const title = document.getElementById('pTitle').value.trim();
         if (!title) return alert("Введите название");
+
+        btn.innerText = 'Сохранение...';
+        btn.disabled = true;
+
         const payload = {
-            user_id: uid, title, date_scout: document.getElementById('pDate').value,
-            tag_text: document.getElementById('pTagText').value, tag_color: selectedColor,
-            meeting_time: document.getElementById('pTime').value, exit_time: document.getElementById('pExitTime').value,
-            location_address: document.getElementById('pAddress').value, map_url: document.getElementById('pMapUrl').value,
-            coords: document.getElementById('pCoords').value, status: 'active'
+            user_id: uid,
+            title: title,
+            date_scout: document.getElementById('pDate').value,
+            tag_text: document.getElementById('pTagText').value,
+            tag_color: selectedColor,
+            meeting_time: document.getElementById('pTime').value,
+            exit_time: document.getElementById('pExitTime').value,
+            location_address: document.getElementById('pAddress').value,
+            map_url: document.getElementById('pMapUrl').value,
+            coords: document.getElementById('pCoords').value,
+            status: 'active'
         };
-        const { data, error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload }).select();
-        if (!error) { currentEditId = data[0].id; showView('planView'); }
+
+        try {
+            let res;
+            if (currentEditId) {
+                res = await client.from('projects').update(payload).eq('id', currentEditId).select();
+            } else {
+                res = await client.from('projects').insert([payload]).select();
+            }
+
+            if (res.error) throw res.error;
+            
+            currentEditId = res.data[0].id;
+            showView('planView');
+        } catch (e) {
+            console.error("Save error:", e);
+            alert("Ошибка БД: " + e.message);
+        } finally {
+            btn.innerText = 'Сохранить и далее';
+            btn.disabled = false;
+        }
     }
 
     async function finalSaveAll() {
-        await client.from('projects').update({
-            travel_time: document.getElementById('pTravelTime').value,
-            plan_data: locations
-        }).eq('id', currentEditId);
-        showView('mainView');
+        const btn = document.getElementById('btnFinalSave');
+        btn.innerText = 'Сохранение...';
+        btn.disabled = true;
+
+        try {
+            const { error } = await client.from('projects').update({
+                travel_time: document.getElementById('pTravelTime').value,
+                plan_data: locations
+            }).eq('id', currentEditId);
+            
+            if (error) throw error;
+            showView('mainView');
+        } catch (e) {
+            alert("Ошибка сохранения: " + e.message);
+        } finally {
+            btn.innerText = 'Финальное сохранение';
+            btn.disabled = false;
+        }
     }
 
     async function loadProjects() {
@@ -291,7 +334,8 @@
     }
 
     function createNewProject() {
-        currentEditId = null; locations = [];
+        currentEditId = null; 
+        locations = [];
         document.querySelectorAll('input').forEach(i => i.value = '');
         setTagColor('#ff3b30', null);
         renderLocations();
@@ -302,7 +346,7 @@
         currentTab = t;
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById('t-' + t).classList.add('active');
-        showView('mainView');
+        loadProjects();
     }
 
     loadProjects();
