@@ -9,7 +9,6 @@
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; text-align: center; }
         h2 { font-size: 24px; margin: 10px 0 20px; font-weight: 800; }
         
-        /* Вкладки */
         .tabs { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 25px; height: 60px; }
         
         .tab { 
@@ -20,29 +19,27 @@
             padding: 10px 16px; 
             border-radius: 12px; 
             border: 2px solid transparent;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Плавная анимация */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 6px;
             background: #fff;
         }
 
-        /* Общее состояние для всех активных вкладок */
         .tab.active { 
-            transform: scale(1.15); /* Одинаковое увеличение для всех */
+            transform: scale(1.15); 
             color: #000;
         }
 
-        /* Индивидуальные цвета рамок */
-        #t-active.active { border-color: #34c759; color: #34c759; } /* Зеленый */
-        #t-hidden.active { border-color: #8e8e93; color: #8e8e93; } /* Серый */
-        #t-trash.active { border-color: #ff3b30; color: #ff3b30; }  /* Красный */
+        /* Цвета рамок для активных состояний */
+        #t-active.active { border-color: #34c759; color: #34c759; }
+        #t-hidden.active { border-color: #8e8e93; color: #8e8e93; }
+        #t-trash.active { border-color: #ff3b30; color: #ff3b30; }
 
-        /* Иконка глаза только для Скрытых */
-        .eye-icon { display: none; }
-        #t-hidden.active .eye-icon { display: inline; }
+        /* Минималистичный текстовый символ глаза */
+        .eye-sym { display: none; font-size: 12px; }
+        #t-hidden.active .eye-sym { display: inline; }
 
-        /* Дизайн карточек и кнопок */
         .project-card { border: 1px solid #eee; border-radius: 14px; padding: 18px; margin-bottom: 15px; position: relative; display: flex; justify-content: space-between; align-items: center; }
         .project-info { flex: 1; cursor: pointer; }
         .project-title { font-weight: 800; font-size: 20px; margin-bottom: 4px; }
@@ -59,7 +56,6 @@
         .context-menu { position: absolute; right: 10px; top: 50px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100; text-align: left; overflow: hidden; }
         .menu-item { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
 
-        /* Стили для выбора цвета тега */
         .color-picker { display: flex; justify-content: center; gap: 10px; margin: 10px 0 20px; }
         .color-opt { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; box-sizing: border-box; }
         .color-opt.selected { border-color: #000; }
@@ -72,7 +68,7 @@
     <div class="tabs">
         <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
         <div id="t-hidden" class="tab" onclick="switchTab('hidden')">
-            <span class="eye-icon">👁</span> Скрытые
+            <span class="eye-sym">○</span> Скрытые
         </div>
         <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
     </div>
@@ -81,6 +77,7 @@
 </div>
 
 <div id="editorView" class="hidden">
+    <!-- Секция редактора без изменений -->
     <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
         <button onclick="closeEditor()" style="background:none; border:none; font-size:16px;">Отмена</button>
         <button onclick="saveProject()" style="background:none; border:none; font-weight:800; font-size:16px; color:#2481cc;">Готово</button>
@@ -104,6 +101,7 @@
 </div>
 
 <script>
+    // Вся логика JS остается идентичной, включая Supabase и обработку вкладок
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
