@@ -10,6 +10,8 @@
         .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10001; pointer-events: none; font-weight: 600; }
         
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 10px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
+        .reload-btn { position: absolute; left: 15px; top: 12px; background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; filter: grayscale(1); opacity: 0.6; }
+        
         h2 { font-size: 20px; margin: 10px 0; font-weight: 800; }
         
         .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
@@ -24,7 +26,6 @@
         
         .main-input { width: 100%; padding: 16px; border: 1px solid #efefef; border-radius: 14px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; }
         
-        /* Ультра-компактный выбор цвета */
         .color-picker { display: flex; gap: 15px; margin-top: 12px; justify-content: flex-start; align-items: center; }
         .color-btn { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
         .color-btn.active { border-color: #000; transform: scale(1.2); }
@@ -45,10 +46,11 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 16:20 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 16:22 (Tbilisi)</div>
 
 <div id="mainView">
     <div class="header-sticky">
+        <button class="reload-btn" onclick="window.location.reload()">🔄</button>
         <h2>Мои Проекты</h2>
         <div class="tabs">
             <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
@@ -152,7 +154,6 @@
         el.classList.add('active');
     }
 
-    // Валидация даты (дд.мм)
     document.getElementById('pDate').addEventListener('input', function (e) {
         let v = e.target.value.replace(/\D/g, '');
         if (v.length > 4) v = v.substring(0, 4);
