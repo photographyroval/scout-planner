@@ -7,42 +7,35 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; }
-        
         .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.5); color: #fff; padding: 3px 7px; border-radius: 6px; font-size: 9px; z-index: 10000; pointer-events: none; }
         
-        /* Шапка */
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 10px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
         h2 { font-size: 20px; margin: 10px 0; font-weight: 800; }
         
         .tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
-        .tab { font-size: 13px; font-weight: 600; color: #999; padding: 8px 12px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; }
-        .tab.active { color: #000; border-color: #34c759; }
+        .tab { font-size: 13px; font-weight: 600; color: #999; padding: 8px 12px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+        /* Только активная вкладка становится зеленой */
+        .tab.active { color: #34c759; border-color: #34c759; background: rgba(52, 199, 89, 0.05); }
 
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
-        
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; }
         
-        /* Поля ввода */
         .editor-form { width: 100%; max-width: 350px; }
         .input-group { margin-bottom: 25px; }
-        .input-label { font-size: 13px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; }
+        .input-label { font-size: 13px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; text-align: left; }
         
         .main-input { 
             width: 100%; padding: 18px; border: 1px solid #efefef; border-radius: 16px; 
             font-size: 17px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9;
-            color: #000; /* Цвет вводимого текста */
-            transition: all 0.2s;
+            color: #000; transition: all 0.2s;
         }
-        
-        /* Цвет подсказки (placeholder) */
         .main-input::placeholder { color: #ccc; font-weight: 400; }
-        .main-input:focus { border-color: #007aff; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .main-input:focus { border-color: #007aff; background: #fff; }
 
-        .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #fff; }
-        .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; padding: 5px; }
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #fff; border-bottom: 1px solid #f9f9f9; }
+        .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; }
         
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; }
-        
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; text-align: left; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -73,7 +66,7 @@
         <div class="editor-form">
             <div class="input-group">
                 <span class="input-label">Название проекта (видно всем)</span>
-                <input type="text" id="pTitle" class="main-input" placeholder="Например: Съемка в лесу">
+                <input type="text" id="pTitle" class="main-input" placeholder="Название">
             </div>
             <div class="input-group">
                 <span class="input-label">Дата</span>
@@ -94,7 +87,7 @@
 </div>
 
 <script>
-    const UPDATE_TIME = "30.04 15:55"; 
+    const UPDATE_TIME = "30.04 16:15"; 
     document.getElementById('appVersion').innerText = `v. ${UPDATE_TIME}`;
 
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
@@ -106,27 +99,22 @@
     let currentTab = 'active';
     let currentEditId = null;
 
-    // Маска даты с проверкой на реальные числа
+    // Исправленная маска даты
     document.getElementById('pDate').addEventListener('input', function (e) {
         let v = e.target.value.replace(/\D/g, ''); 
-        
         if (v.length >= 2) {
             let day = parseInt(v.substring(0, 2));
             if (day > 31) day = 31;
             if (v.substring(0, 2) === '00') day = '01';
             v = day.toString().padStart(2, '0') + v.substring(2);
         }
-
         if (v.length >= 4) {
             let month = parseInt(v.substring(2, 4));
             if (month > 12) month = 12;
             if (v.substring(2, 4) === '00') month = '01';
             v = v.substring(0, 2) + month.toString().padStart(2, '0');
         }
-
-        if (v.length > 2) {
-            v = v.substring(0, 2) + '.' + v.substring(2, 4);
-        }
+        if (v.length > 2) v = v.substring(0, 2) + '.' + v.substring(2, 4);
         e.target.value = v;
     });
 
@@ -162,8 +150,7 @@
     }
 
     function handleBack() {
-        const hasContent = document.getElementById('pTitle').value.trim().length > 0;
-        if (hasContent && !currentEditId) {
+        if (document.getElementById('pTitle').value.trim().length > 0 && !currentEditId) {
             if (confirm("Выйти без сохранения?")) showView('mainView');
         } else {
             showView('mainView');
@@ -197,10 +184,14 @@
         if (v === 'mainView') loadProjects();
     }
 
+    // ИСПРАВЛЕННОЕ ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
     function switchTab(t) {
         currentTab = t;
+        // 1. Убираем класс active у ВСЕХ вкладок
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.getElementById('t-'+t).classList.add('active');
+        // 2. Добавляем active только той, на которую нажали
+        document.getElementById('t-' + t).classList.add('active');
+        
         loadProjects();
     }
 
