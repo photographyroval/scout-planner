@@ -30,10 +30,17 @@
         .main-input { width: 100%; padding: 14px; border: 1px solid #efefef; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; color: #000; }
         .main-input::placeholder { color: #999; font-weight: 400; }
 
+        .color-picker { display: flex; gap: 15px; margin-top: 12px; justify-content: flex-start; align-items: center; }
+        .color-btn { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; box-sizing: content-box; }
+        .color-btn.active { border-color: #000; transform: scale(1.3); }
+        .tag-red { background: #ff3b30; } .tag-yellow { background: #ffcc00; }
+        .tag-green { background: #34c759; } .tag-gray { background: #8e8e93; }
+
         .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; transition: transform 0.1s; }
         .project-card:active { transform: scale(0.97); background: #fafafa; }
-        
-        .location-block { background: #fcfcfc; border: 1px solid #eee; border-radius: 20px; padding: 15px; margin-bottom: 20px; width: 100%; max-width: 350px; position: relative; }
+        .list-tag { font-size: 10px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: inline-block; }
+
+        .location-block { background: #fcfcfc; border: 1px solid #eee; border-radius: 20px; padding: 15px; margin-bottom: 20px; width: 100%; max-width: 350px; }
         .loc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .loc-num { background: #000; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
         
@@ -46,9 +53,8 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 18:05 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 18:15 (Tbilisi)</div>
 
-<!-- Экран 1: Список -->
 <div id="mainView">
     <div class="header-sticky">
         <button class="reload-btn" onclick="window.location.reload()">🔄</button>
@@ -63,7 +69,6 @@
     <div class="container" id="projectList"></div>
 </div>
 
-<!-- Экран 2: Базовая инфо -->
 <div id="editorView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← Отмена</button>
@@ -82,11 +87,16 @@
         <div class="input-group">
             <span class="input-label">Тег</span>
             <input type="text" id="pTagText" class="main-input" placeholder="Напр: СРОЧНО" maxlength="12">
+            <div class="color-picker">
+                <div class="color-btn tag-red active" data-color="#ff3b30" onclick="setTagColor('#ff3b30', this)"></div>
+                <div class="color-btn tag-yellow" data-color="#ffcc00" onclick="setTagColor('#ffcc00', this)"></div>
+                <div class="color-btn tag-green" data-color="#34c759" onclick="setTagColor('#34c759', this)"></div>
+                <div class="color-btn tag-gray" data-color="#8e8e93" onclick="setTagColor('#8e8e93', this)"></div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Экран 3: Сбор -->
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
@@ -119,7 +129,6 @@
     </div>
 </div>
 
-<!-- Экран 4: План просмотра -->
 <div id="planView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('locationView')" style="color: #007aff;">← Назад</button>
@@ -127,15 +136,11 @@
     </div>
     <div class="container">
         <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 20px;">План просмотра</h3>
-        
-        <!-- Переезд -->
         <div class="input-group" style="background: #fff4e5; padding: 15px; border-radius: 16px; border: 1px solid #ffd8a8;">
-            <span class="input-label" style="color: #d9480f;">Время в пути (от сбора до точки Б)</span>
+            <span class="input-label" style="color: #d9480f;">Время в пути (до точки Б)</span>
             <input type="text" id="pTravelTime" class="main-input" placeholder="Напр: 40 мин" style="border-color: #ffd8a8;">
         </div>
-
         <div id="locationsList" style="width: 100%;"></div>
-
         <button class="add-loc-btn" onclick="addLocationBlock()">+ Добавить локацию</button>
     </div>
 </div>
@@ -149,9 +154,19 @@
 
     let currentTab = 'active';
     let currentEditId = null;
+    let selectedColor = '#ff3b30';
     let locations = [];
 
-    // Инициализация масок для всех текущих и будущих элементов
+    function setTagColor(color, el) {
+        selectedColor = color;
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        if (el) el.classList.add('active');
+        else {
+            const btn = document.querySelector(`.color-btn[data-color="${color}"]`);
+            if (btn) btn.classList.add('active');
+        }
+    }
+
     function initMasks() {
         document.querySelectorAll('.date-mask').forEach(el => {
             el.oninput = (e) => {
@@ -163,7 +178,6 @@
                 e.target.value = d + (m.length > 0 ? '.' + m : '');
             };
         });
-
         document.querySelectorAll('.time-mask').forEach(el => {
             el.oninput = (e) => {
                 let v = e.target.value.replace(/\D/g, '');
@@ -175,7 +189,6 @@
                 e.target.style.color = e.target.value.length > 0 ? '#000' : '#999';
             };
         });
-
         document.querySelectorAll('.coord-mask').forEach(el => {
             el.oninput = (e) => e.target.value = e.target.value.replace(/[^0-9., ]/g, '');
         });
@@ -189,104 +202,58 @@
     }
 
     function addLocationBlock(data = null) {
-        if (locations.length >= 30) return;
         const id = Date.now() + Math.random();
-        const loc = {
-            id,
-            name: data?.name || '',
-            photo_url: data?.photo_url || '',
-            time_start: data?.time_start || '',
-            time_end: data?.time_end || '',
-            address: data?.address || '',
-            map_url: data?.map_url || '',
-            coords: data?.coords || ''
-        };
-        locations.push(loc);
+        locations.push({
+            id, name: data?.name || '', photo_url: data?.photo_url || '',
+            time_start: data?.time_start || '', time_end: data?.time_end || '',
+            address: data?.address || '', map_url: data?.map_url || '', coords: data?.coords || ''
+        });
         renderLocations();
-    }
-
-    function removeLocation(id) {
-        locations = locations.filter(l => l.id !== id);
-        renderLocations();
-    }
-
-    function updateLoc(id, field, value) {
-        const loc = locations.find(l => l.id === id);
-        if (loc) loc[field] = value;
     }
 
     function renderLocations() {
         const container = document.getElementById('locationsList');
         container.innerHTML = locations.map((l, index) => `
             <div class="location-block">
-                <div class="loc-header">
-                    <div class="loc-num">${index + 1}</div>
-                    <button onclick="removeLocation(${l.id})" style="background:none; border:none; color:#ff3b30; font-weight:700;">Удалить</button>
+                <div class="loc-header"><div class="loc-num">${index + 1}</div>
+                <button onclick="removeLocation(${l.id})" style="background:none; border:none; color:#ff3b30; font-weight:700;">- Удалить</button></div>
+                <input type="text" class="main-input" placeholder="Название" value="${l.name}" onchange="updateLoc(${l.id}, 'name', this.value)" style="margin-bottom:10px;">
+                <input type="text" class="main-input" placeholder="Ссылка на фото" value="${l.photo_url}" onchange="updateLoc(${l.id}, 'photo_url', this.value)" style="margin-bottom:10px;">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <input type="text" class="main-input time-mask" placeholder="С чч:мм" value="${l.time_start}" onchange="updateLoc(${l.id}, 'time_start', this.value)">
+                    <input type="text" class="main-input time-mask" placeholder="До чч:мм" value="${l.time_end}" onchange="updateLoc(${l.id}, 'time_end', this.value)">
                 </div>
-                <div class="input-group">
-                    <input type="text" class="main-input" placeholder="Название локации" value="${l.name}" onchange="updateLoc(${l.id}, 'name', this.value)">
-                </div>
-                <div class="input-group">
-                    <input type="text" class="main-input" placeholder="Ссылка на фото" value="${l.photo_url}" onchange="updateLoc(${l.id}, 'photo_url', this.value)">
-                </div>
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <input type="text" class="main-input time-mask" placeholder="С чч:мм" value="${l.time_start}" onchange="updateLoc(${l.id}, 'time_start', this.value)" maxlength="5">
-                    <input type="text" class="main-input time-mask" placeholder="До чч:мм" value="${l.time_end}" onchange="updateLoc(${l.id}, 'time_end', this.value)" maxlength="5">
-                </div>
-                <div class="input-group">
-                    <input type="text" class="main-input" placeholder="Адрес" value="${l.address}" onchange="updateLoc(${l.id}, 'address', this.value)">
-                </div>
-                <div class="input-group">
-                    <input type="text" class="main-input" placeholder="Ссылка на карту" value="${l.map_url}" onchange="updateLoc(${l.id}, 'map_url', this.value)">
-                </div>
-                <div class="input-group">
-                    <input type="text" class="main-input coord-mask" placeholder="Координаты" value="${l.coords}" onchange="updateLoc(${l.id}, 'coords', this.value)">
-                </div>
+                <input type="text" class="main-input" placeholder="Адрес" value="${l.address}" onchange="updateLoc(${l.id}, 'address', this.value)" style="margin-bottom:10px;">
+                <input type="text" class="main-input" placeholder="Ссылка на карту" value="${l.map_url}" onchange="updateLoc(${l.id}, 'map_url', this.value)" style="margin-bottom:10px;">
+                <input type="text" class="main-input coord-mask" placeholder="Координаты" value="${l.coords}" onchange="updateLoc(${l.id}, 'coords', this.value)">
             </div>
         `).join('');
         initMasks();
     }
 
-    async function saveAndGoToPlan() {
-        // Промежуточное сохранение данных для получения ID, если его еще нет
-        const title = document.getElementById('pTitle').value.trim();
-        if (!title) return alert("Укажите название проекта");
-        
-        const payload = {
-            user_id: uid,
-            title: title,
-            date_scout: document.getElementById('pDate').value,
-            meeting_time: document.getElementById('pTime').value,
-            exit_time: document.getElementById('pExitTime').value,
-            location_address: document.getElementById('pAddress').value,
-            map_url: document.getElementById('pMapUrl').value,
-            coords: document.getElementById('pCoords').value,
-            tag_text: document.getElementById('pTagText').value,
-            status: 'active'
-        };
+    function removeLocation(id) { locations = locations.filter(l => l.id !== id); renderLocations(); }
+    function updateLoc(id, field, value) { const loc = locations.find(l => l.id === id); if (loc) loc[field] = value; }
 
+    async function saveAndGoToPlan() {
+        const title = document.getElementById('pTitle').value.trim();
+        if (!title) return alert("Введите название");
+        const payload = {
+            user_id: uid, title, date_scout: document.getElementById('pDate').value,
+            tag_text: document.getElementById('pTagText').value, tag_color: selectedColor,
+            meeting_time: document.getElementById('pTime').value, exit_time: document.getElementById('pExitTime').value,
+            location_address: document.getElementById('pAddress').value, map_url: document.getElementById('pMapUrl').value,
+            coords: document.getElementById('pCoords').value, status: 'active'
+        };
         const { data, error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload }).select();
-        if (!error && data) {
-            currentEditId = data[0].id;
-            showView('planView');
-        }
+        if (!error) { currentEditId = data[0].id; showView('planView'); }
     }
 
     async function finalSaveAll() {
-        const payload = {
+        await client.from('projects').update({
             travel_time: document.getElementById('pTravelTime').value,
-            plan_data: locations // Сохраняем массив локаций в JSON поле
-        };
-        await client.from('projects').update(payload).eq('id', currentEditId);
+            plan_data: locations
+        }).eq('id', currentEditId);
         showView('mainView');
-    }
-
-    // Стандартные функции управления
-    function switchTab(t) {
-        currentTab = t;
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.getElementById('t-' + t).classList.add('active');
-        loadProjects();
     }
 
     async function loadProjects() {
@@ -295,10 +262,10 @@
         list.innerHTML = data?.length ? data.map(p => `
             <div class="project-card" onclick="openEdit('${p.id}')">
                 <div style="flex:1; text-align:left;">
+                    ${p.tag_text ? `<div class="list-tag" style="background:${p.tag_color || '#8e8e93'}">${p.tag_text}</div>` : ''}
                     <div style="font-weight:800; font-size:17px;">${p.title}</div>
                     <div style="font-size:13px; color:#888;">🗓 ${p.date_scout || '...'}</div>
-                </div>
-                <div style="color:#ddd; font-size:22px;">›</div>
+                </div><div style="color:#ddd; font-size:22px;">›</div>
             </div>
         `).join('') : '<p style="color:#bbb; margin-top:50px;">Пусто</p>';
     }
@@ -309,12 +276,13 @@
             currentEditId = data.id;
             document.getElementById('pTitle').value = data.title || '';
             document.getElementById('pDate').value = data.date_scout || '';
+            document.getElementById('pTagText').value = data.tag_text || '';
+            setTagColor(data.tag_color || '#ff3b30', null);
             document.getElementById('pTime').value = data.meeting_time || '';
             document.getElementById('pExitTime').value = data.exit_time || '';
             document.getElementById('pAddress').value = data.location_address || '';
             document.getElementById('pMapUrl').value = data.map_url || '';
             document.getElementById('pCoords').value = data.coords || '';
-            document.getElementById('pTagText').value = data.tag_text || '';
             document.getElementById('pTravelTime').value = data.travel_time || '';
             locations = data.plan_data || [];
             renderLocations();
@@ -323,11 +291,18 @@
     }
 
     function createNewProject() {
-        currentEditId = null;
-        locations = [];
+        currentEditId = null; locations = [];
         document.querySelectorAll('input').forEach(i => i.value = '');
+        setTagColor('#ff3b30', null);
         renderLocations();
         showView('editorView');
+    }
+
+    function switchTab(t) {
+        currentTab = t;
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('t-' + t).classList.add('active');
+        showView('mainView');
     }
 
     loadProjects();
