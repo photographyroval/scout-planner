@@ -39,9 +39,8 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 14:46 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 14:57 (Tbilisi)</div>
 
-<!-- ГЛАВНЫЙ ЭКРАН -->
 <div id="mainView">
     <div class="header-sticky">
         <h2>Мои Проекты</h2>
@@ -55,26 +54,24 @@
     <div class="container" id="projectList"></div>
 </div>
 
-<!-- ШАГ 1: ОСНОВНОЕ -->
 <div id="editorView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← Отмена</button>
         <button class="nav-btn" onclick="showView('locationView')" style="color: #34c759;">Далее</button>
     </div>
     <div class="container">
-        <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 30px; text-align: left;">Основное</h3>
+        <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 30px; text-align: left;">Что планируем?</h3>
         <div class="input-group">
             <span class="input-label">Название проекта</span>
-            <input type="text" id="pTitle" class="main-input" placeholder="Например: Съемка в Старом городе">
+            <input type="text" id="pTitle" class="main-input" placeholder="Например: Съемка клипа">
         </div>
         <div class="input-group">
-            <span class="input-label">Дата</span>
-            <input type="text" id="pDate" class="main-input" placeholder="30.04" maxlength="5">
+            <span class="input-label">Когда</span>
+            <input type="text" id="pDate" class="main-input" placeholder="дд.мм" inputmode="numeric" maxlength="5">
         </div>
     </div>
 </div>
 
-<!-- ШАГ 2: СБОР -->
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
@@ -83,11 +80,11 @@
     <div class="container">
         <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 30px; text-align: left;">Сбор</h3>
         <div class="input-group">
-            <span class="input-label">Место сбора</span>
-            <input type="text" id="pAddress" class="main-input" placeholder="ул. Леселидзе, 5">
+            <span class="input-label">Место сбора (адрес)</span>
+            <input type="text" id="pAddress" class="main-input" placeholder="Введите адрес">
         </div>
         <div class="input-group">
-            <span class="input-label">Ссылка на карту (URL)</span>
+            <span class="input-label">Ссылка на карту</span>
             <input type="text" id="pMapUrl" class="main-input" placeholder="https://maps.app.goo.gl/...">
         </div>
         <div class="input-group">
@@ -97,7 +94,6 @@
     </div>
 </div>
 
-<!-- ФИНАЛЬНЫЙ ПРОСМОТР -->
 <div id="detailsView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← К проектам</button>
@@ -130,14 +126,25 @@
     let currentTab = 'active';
     let currentEditId = null;
 
-    function showView(v) {
-        // Прячем все корневые экраны
-        document.getElementById('mainView').classList.add('hidden');
-        document.getElementById('editorView').classList.add('hidden');
-        document.getElementById('locationView').classList.add('hidden');
-        document.getElementById('detailsView').classList.add('hidden');
+    // Валидация даты (дд.мм)
+    document.getElementById('pDate').addEventListener('input', function (e) {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 4) v = v.substring(0, 4);
         
-        // Показываем нужный
+        let d = v.substring(0, 2);
+        let m = v.substring(2, 4);
+
+        if (d !== '' && parseInt(d) > 31) d = '31';
+        if (d !== '' && parseInt(d) === 0 && d.length === 2) d = '01';
+        
+        if (m !== '' && parseInt(m) > 12) m = '12';
+        if (m !== '' && parseInt(m) === 0 && m.length === 2) m = '01';
+
+        e.target.value = d + (m.length > 0 ? '.' + m : '');
+    });
+
+    function showView(v) {
+        document.querySelectorAll('body > div[id]').forEach(d => d.classList.add('hidden'));
         document.getElementById(v).classList.remove('hidden');
         if (v === 'mainView') loadProjects();
     }
@@ -175,12 +182,9 @@
         if (!error) {
             document.getElementById('finalTitle').innerText = payload.title;
             document.getElementById('finalDate').innerText = `🗓 ${payload.date_scout || 'дд.мм'}`;
-            
             const addr = document.getElementById('finalAddress');
             addr.innerText = payload.location_address || 'Открыть карту';
-            // Приоритет ссылке из поля, если её нет — поиск по адресу
             addr.href = payload.map_url || `https://maps.google.com/?q=${encodeURIComponent(payload.location_address)}`;
-            
             document.getElementById('finalTime').innerText = payload.meeting_time || '--:--';
             showView('detailsView');
         }
