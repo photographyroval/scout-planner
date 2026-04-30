@@ -26,7 +26,7 @@
         
         .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; }
         
-        /* Исправленный тег: не растягивается */
+        /* Исправленный тег: теперь не на всю ширину */
         .list-tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; display: inline-block; width: fit-content; opacity: 0.9; }
         
         .card-menu-btn { position: absolute; top: 8px; right: 8px; font-size: 20px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #bbb; z-index: 10; }
@@ -51,7 +51,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 01.05.2</div>
+<div class="version-tag">v. 01.05.3</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -67,7 +67,6 @@
     <div class="container" id="projectList"></div>
 </div>
 
-<!-- EDITOR VIEWS -->
 <div id="editorView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← Отмена</button>
@@ -117,6 +116,15 @@
     let currentEditId = null;
     let locations = [];
 
+    // Сильное вибро при переключении вкладок
+    function switchTab(t) {
+        currentTab = t;
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('t-' + t).classList.add('active');
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); 
+        loadProjects();
+    }
+
     function toggleMenu(e, id) {
         e.stopPropagation();
         document.querySelectorAll('.dropdown-menu').forEach(m => {
@@ -129,9 +137,16 @@
 
     async function changeStatus(e, id, newStatus) {
         e.stopPropagation();
+        
+        // Подтверждение при удалении
+        if (newStatus === 'trash') {
+            const confirmed = confirm("Точно отправить проект в корзину?");
+            if (!confirmed) return;
+        }
+
         const { error } = await client.from('projects').update({ status: newStatus }).eq('id', id);
         if (!error) {
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             loadProjects();
         }
     }
@@ -148,9 +163,8 @@
             let endTime = c.exit_time || '..:..';
             if (locCount > 0 && c.locations[locCount - 1].time_start) endTime = c.locations[locCount - 1].time_start;
 
-            // Определяем кнопки меню в зависимости от вкладки
             let statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'hidden')">🙈 Скрыть</div>`;
-            if (currentTab === 'hidden') statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'active')">✅ В активные</div>`;
+            if (currentTab === 'hidden') statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'active')">✅ Вернуть в активные</div>`;
             if (currentTab === 'trash') statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'active')">🔄 Восстановить</div>`;
 
             return `
@@ -161,8 +175,7 @@
                         <div class="menu-item" onclick="event.stopPropagation(); alert('PDF скоро будет!')">📄 PDF</div>
                         ${currentTab !== 'trash' ? `<div class="menu-item delete" onclick="changeStatus(event, '${p.id}', 'trash')">🗑 В корзину</div>` : ''}
                     </div>
-
-                    <div style="font-weight:800; font-size:18px; margin-bottom: 4px; padding-right: 30px;">${p.title}</div>
+                    <div style="font-weight:800; font-size:18px; margin-bottom: 4px; padding-right: 30px; color: #000;">${p.title}</div>
                     <div style="font-size:13px; color:#666; margin-bottom: 8px; display: flex; gap: 10px;">
                         <span>🗓 ${p.date_scout || '...'}</span>
                         <span>🕒 ${startTime} — ${endTime}</span>
@@ -176,20 +189,19 @@
 
     async function finalSaveAll() {
         const payload = {
-            user_id: uid,
-            title: document.getElementById('pTitle').value,
-            date_scout: document.getElementById('pDate').value,
-            tags: document.getElementById('pTagText').value,
+            user_id: uid, title: document.getElementById('pTitle').value,
+            date_scout: document.getElementById('pDate').value, tags: document.getElementById('pTagText').value,
             content: {
-                meeting_time: document.getElementById('pTime').value,
-                exit_time: document.getElementById('pExitTime').value,
-                location_address: document.getElementById('pAddress').value,
-                locations: locations
+                meeting_time: document.getElementById('pTime').value, exit_time: document.getElementById('pExitTime').value,
+                location_address: document.getElementById('pAddress').value, locations: locations
             },
             status: 'active'
         };
         const { error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload });
-        if (!error) showView('mainView');
+        if (!error) {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            showView('mainView');
+        }
     }
 
     async function openEdit(id) {
@@ -228,7 +240,6 @@
     }
     function updateLoc(id, f, v) { const l = locations.find(x => x.id === id); if(l) l[f] = v; }
     function showView(v) { document.querySelectorAll('body > div[id]').forEach(d => d.classList.add('hidden')); document.getElementById(v).classList.remove('hidden'); if(v === 'mainView') loadProjects(); }
-    function switchTab(t) { currentTab = t; document.querySelectorAll('.tab').forEach(el => el.classList.remove('active')); document.getElementById('t-' + t).classList.add('active'); loadProjects(); }
 
     loadProjects();
 </script>
