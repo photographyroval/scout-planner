@@ -9,58 +9,71 @@
         :root { --tg-theme-button-color: #2481cc; }
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; }
         
-        /* Проекты */
-        .project-card { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
-        .project-info { flex: 1; cursor: pointer; }
-        .project-title { font-weight: bold; font-size: 17px; margin-bottom: 4px; display: flex; align-items: center; }
-        .pin-icon { margin-right: 6px; font-size: 14px; }
-        .project-meta { font-size: 13px; color: #666; }
+        /* Заголовки */
+        h2 { text-align: center; font-size: 24px; margin-top: 10px; }
         
-        /* Меню действий (Три точки) */
-        .dots-btn { padding: 5px 10px; cursor: pointer; font-size: 20px; color: #999; }
-        .context-menu { position: absolute; right: 10px; top: 40px; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 150px; }
-        .menu-item { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; cursor: pointer; }
-        .menu-item:last-child { border-bottom: none; color: #ff3b30; }
+        /* Карточка проекта */
+        .project-card { background: #fff; border: 1px solid #eee; border-radius: 14px; padding: 18px; margin-bottom: 15px; position: relative; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .project-info { flex: 1; text-align: center; cursor: pointer; }
+        .project-title { font-weight: 800; font-size: 20px; margin-bottom: 6px; }
+        .project-meta { font-size: 15px; color: #444; font-weight: 600; }
+        
+        /* Теги */
+        .tag-container { margin-top: 8px; display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; }
+        .tag-pill { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #fff; background: #8e8e93; }
+        
+        /* Цвета тегов */
+        .tag-red { background: #ff3b30; }
+        .tag-green { background: #34c759; }
+        .tag-yellow { background: #ffcc00; color: #000; }
+        .tag-blue { background: #007aff; }
 
         /* Вкладки */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .tab { padding: 8px 16px; border-radius: 20px; font-size: 14px; cursor: pointer; background: #f0f0f0; color: #666; }
-        .tab.active { background: var(--tg-theme-button-color); color: #fff; }
+        .tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .tab { font-size: 16px; font-weight: 600; cursor: pointer; color: #999; padding-bottom: 5px; }
+        .tab.active { color: #000; border-bottom: 2px solid #000; }
 
-        /* Теги */
-        .tag-pill { display: inline-block; background: #f0f0f0; color: #666; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-top: 5px; margin-right: 5px; }
-
-        .btn { background: var(--tg-theme-button-color); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn { background: #000; color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
         .hidden { display: none; }
         
         /* Редактор */
-        .editor-input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; font-size: 16px; box-sizing: border-box; }
-        label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .editor-input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; text-align: center; }
+        label { font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 6px; display: block; text-align: center; font-weight: bold; }
+        .dots-btn { font-size: 24px; color: #ccc; padding-left: 10px; }
+        
+        /* Контекстное меню */
+        .context-menu { position: absolute; right: 10px; top: 50px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 100; overflow: hidden; }
+        .menu-item { padding: 14px 20px; font-size: 15px; border-bottom: 1px solid #f5f5f5; }
     </style>
 </head>
 <body>
 
 <div id="mainView">
+    <h2>Проекты</h2>
     <div class="tabs">
-        <div id="tabActive" class="tab active" onclick="switchTab('active')">Планы</div>
+        <div id="tabActive" class="tab active" onclick="switchTab('active')">Активные</div>
         <div id="tabTrash" class="tab" onclick="switchTab('trash')">Корзина</div>
     </div>
 
     <div id="projectList"></div>
-    <button id="addBtn" class="btn" onclick="createNewProject()">+ Новый проект</button>
+    <button id="addBtn" class="btn" onclick="createNewProject()">+ Создать план</button>
 </div>
 
 <div id="editorView" class="hidden">
-    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
-        <button onclick="closeEditor()" style="background:none; border:none; color:var(--tg-theme-button-color); font-size:17px;">Назад</button>
-        <button onclick="saveProject()" style="background:none; border:none; color:var(--tg-theme-button-color); font-weight:bold; font-size:17px;">Сохранить</button>
+    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 25px;">
+        <button onclick="closeEditor()" style="background:none; border:none; color:#000; font-size:17px;">↩ Отмена</button>
+        <button onclick="saveProject()" style="background:none; border:none; color:#2481cc; font-weight:800; font-size:17px;">Готово</button>
     </div>
     
-    <label>Название</label>
-    <input type="text" id="pTitle" class="editor-input" placeholder="Напр: Съемка в Тбилиси">
+    <label>Название проекта</label>
+    <input type="text" id="pTitle" class="editor-input" placeholder="Введите название">
     
-    <label>Теги (через запятую)</label>
-    <input type="text" id="pTags" class="editor-input" placeholder="клип, реклама, город">
+    <label>Дата съемки</label>
+    <input type="text" id="pDate" class="editor-input" placeholder="Напр: 15 мая">
+    
+    <label>Теги и цвета</label>
+    <input type="text" id="pTags" class="editor-input" placeholder="клип:red, город:blue">
+    <p style="font-size: 11px; color: #999; text-align: center;">Пример: <b>Реклама:green</b></p>
     
     <div id="blocks"></div>
 </div>
@@ -79,27 +92,36 @@
     async function loadProjects() {
         const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('is_pinned', {ascending: false}).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
-        list.innerHTML = data.map(p => `
+        
+        list.innerHTML = data.map(p => {
+            const tagsHtml = (p.tags || []).map(t => {
+                const [name, color] = t.split(':');
+                const colorClass = color ? `tag-${color.toLowerCase()}` : '';
+                return `<span class="tag-pill ${colorClass}">${name}</span>`;
+            }).join('');
+
+            return `
             <div class="project-card">
                 <div class="project-info" onclick="openProject('${p.id}')">
                     <div class="project-title">
-                        ${p.is_pinned ? '<span class="pin-icon">📌</span>' : ''} ${p.title}
+                        ${p.is_pinned ? '📌 ' : ''}${p.title}
                     </div>
-                    <div class="project-meta">📅 ${p.date_scout || 'Без даты'}</div>
-                    <div>${(p.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('')}</div>
+                    <div class="project-meta">🗓 <b>${p.date_scout || 'Дата не указана'}</b></div>
+                    <div class="tag-container">${tagsHtml}</div>
                 </div>
                 <div class="dots-btn" onclick="toggleMenu(event, '${p.id}')">⋮</div>
                 <div id="menu-${p.id}" class="context-menu hidden">
                     ${currentTab === 'active' ? `
-                        <div class="menu-item" onclick="togglePin('${p.id}', ${p.is_pinned})">${p.is_pinned ? 'Открепить' : 'Закрепить'}</div>
-                        <div class="menu-item" onclick="updateStatus('${p.id}', 'trash')">В корзину</div>
+                        <div class="menu-item" onclick="togglePin('${p.id}', ${p.is_pinned})">${p.is_pinned ? '📍 Открепить' : '📍 Закрепить'}</div>
+                        <div class="menu-item" style="color:red" onclick="updateStatus('${p.id}', 'trash')">🗑 В корзину</div>
                     ` : `
-                        <div class="menu-item" onclick="updateStatus('${p.id}', 'active')">Восстановить</div>
-                        <div class="menu-item" onclick="deleteForever('${p.id}')">Удалить навсегда</div>
+                        <div class="menu-item" onclick="updateStatus('${p.id}', 'active')">♻️ Восстановить</div>
+                        <div class="menu-item" style="color:red; font-weight:bold" onclick="deleteForever('${p.id}')">❌ Удалить навсегда</div>
                     `}
                 </div>
             </div>
-        `).join('') || '<p style="text-align:center; color:#999; margin-top:50px;">Тут пока пусто</p>';
+            `;
+        }).join('') || '<p style="text-align:center; color:#999; margin-top:50px;">Список пуст</p>';
     }
 
     function toggleMenu(e, id) {
@@ -121,7 +143,7 @@
     }
 
     async function deleteForever(id) {
-        if(confirm("Удалить безвозвратно?")) {
+        if(confirm("Это действие нельзя отменить. Удалить?")) {
             await client.from('projects').delete().eq('id', id);
             loadProjects();
         }
@@ -135,10 +157,10 @@
         loadProjects();
     }
 
-    // Редактор (упрощенно для примера)
     function createNewProject() {
         currentId = null;
         document.getElementById('pTitle').value = '';
+        document.getElementById('pDate').value = '';
         document.getElementById('pTags').value = '';
         document.getElementById('mainView').classList.add('hidden');
         document.getElementById('editorView').classList.remove('hidden');
@@ -149,20 +171,22 @@
         const { data } = await client.from('projects').select('*').eq('id', id).single();
         currentId = data.id;
         document.getElementById('pTitle').value = data.title;
+        document.getElementById('pDate').value = data.date_scout || '';
         document.getElementById('pTags').value = (data.tags || []).join(', ');
         document.getElementById('mainView').classList.add('hidden');
         document.getElementById('editorView').classList.remove('hidden');
     }
 
     async function saveProject() {
-        const tags = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(t => t !== "");
+        const rawTags = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(t => t !== "");
         await client.from('projects').upsert({
             id: currentId || undefined,
             user_id: uid,
             title: document.getElementById('pTitle').value || "Без названия",
-            tags: tags,
+            date_scout: document.getElementById('pDate').value,
+            tags: rawTags,
             status: 'active',
-            content: { blocks: [] } // Вставь сюда логику блоков из прошлого кода
+            content: { blocks: [] } 
         });
         closeEditor();
     }
@@ -173,7 +197,6 @@
         loadProjects();
     }
 
-    // Закрытие меню при клике в любое место
     window.onclick = () => {
         if (openMenuId) {
             document.getElementById('menu-'+openMenuId).classList.add('hidden');
