@@ -7,35 +7,62 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; text-align: center; }
-        h2 { font-size: 24px; margin: 10px 0 20px; }
+        h2 { font-size: 24px; margin: 10px 0 20px; font-weight: 800; }
         
         /* Вкладки */
-        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .tab { font-size: 14px; font-weight: 600; cursor: pointer; color: #999; padding: 5px 10px; border-radius: 8px; }
-        .tab.active { color: #000; background: #f0f0f0; }
+        .tabs { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 25px; height: 60px; }
+        
+        .tab { 
+            font-size: 14px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            color: #999; 
+            padding: 10px 16px; 
+            border-radius: 12px; 
+            border: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Плавная анимация */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+        }
 
-        /* Карточка проекта */
+        /* Общее состояние для всех активных вкладок */
+        .tab.active { 
+            transform: scale(1.15); /* Одинаковое увеличение для всех */
+            color: #000;
+        }
+
+        /* Индивидуальные цвета рамок */
+        #t-active.active { border-color: #34c759; color: #34c759; } /* Зеленый */
+        #t-hidden.active { border-color: #8e8e93; color: #8e8e93; } /* Серый */
+        #t-trash.active { border-color: #ff3b30; color: #ff3b30; }  /* Красный */
+
+        /* Иконка глаза только для Скрытых */
+        .eye-icon { display: none; }
+        #t-hidden.active .eye-icon { display: inline; }
+
+        /* Дизайн карточек и кнопок */
         .project-card { border: 1px solid #eee; border-radius: 14px; padding: 18px; margin-bottom: 15px; position: relative; display: flex; justify-content: space-between; align-items: center; }
         .project-info { flex: 1; cursor: pointer; }
         .project-title { font-weight: 800; font-size: 20px; margin-bottom: 4px; }
         .project-meta { font-size: 15px; font-weight: 700; }
         
-        /* Теги */
         .tag-pill { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; margin: 2px; display: inline-block; }
         .tag-gray { background: #8e8e93; } .tag-red { background: #ff3b30; } .tag-green { background: #34c759; } .tag-blue { background: #007aff; } .tag-yellow { background: #ffcc00; color: #000; }
 
-        /* Выбор цвета в редакторе */
-        .color-picker { display: flex; justify-content: center; gap: 10px; margin: 10px 0 20px; }
-        .color-opt { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
-        .color-opt.selected { border-color: #000; }
-
-        .btn { background: #000; color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; font-size: 16px; margin-top: 10px; }
+        .btn { background: #000; color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; font-size: 16px; margin-top: 10px; cursor: pointer; }
         .editor-input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; text-align: center; outline: none; }
         .hidden { display: none; }
         
         .dots-btn { font-size: 24px; color: #ccc; padding: 0 10px; cursor: pointer; }
         .context-menu { position: absolute; right: 10px; top: 50px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100; text-align: left; overflow: hidden; }
         .menu-item { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
+
+        /* Стили для выбора цвета тега */
+        .color-picker { display: flex; justify-content: center; gap: 10px; margin: 10px 0 20px; }
+        .color-opt { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; box-sizing: border-box; }
+        .color-opt.selected { border-color: #000; }
     </style>
 </head>
 <body>
@@ -44,7 +71,9 @@
     <h2>Проекты</h2>
     <div class="tabs">
         <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
-        <div id="t-hidden" class="tab" onclick="switchTab('hidden')">Скрытые</div>
+        <div id="t-hidden" class="tab" onclick="switchTab('hidden')">
+            <span class="eye-icon">👁</span> Скрытые
+        </div>
         <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
     </div>
     <div id="projectList"></div>
@@ -58,9 +87,9 @@
     </div>
     
     <input type="text" id="pTitle" class="editor-input" placeholder="Название проекта">
-    <input type="text" id="pDate" class="editor-input" placeholder="Дата (напр: 15 мая)">
+    <input type="text" id="pDate" class="editor-input" placeholder="Дата съемки">
     
-    <div style="border: 1px solid #eee; padding: 15px; border-radius: 12px;">
+    <div style="border: 1px solid #eee; padding: 15px; border-radius: 14px; margin-top: 10px;">
         <input type="text" id="tagInput" class="editor-input" style="margin-bottom:10px;" placeholder="Текст тега">
         <div class="color-picker">
             <div class="color-opt tag-gray" onclick="selectColor('gray', this)"></div>
@@ -69,8 +98,8 @@
             <div class="color-opt tag-blue" onclick="selectColor('blue', this)"></div>
             <div class="color-opt tag-yellow" onclick="selectColor('yellow', this)"></div>
         </div>
-        <button class="btn" style="background:#f0f0f0; color:#000; font-size:13px; padding:8px;" onclick="addTagToList()">+ Добавить тег</button>
-        <div id="tempTags" style="margin-top:10px;"></div>
+        <button class="btn" style="background:#f5f5f5; color:#000; font-size:13px; padding:10px; margin-top:0;" onclick="addTagToList()">+ Добавить тег</button>
+        <div id="tempTags" style="margin-top:12px;"></div>
     </div>
 </div>
 
@@ -95,7 +124,7 @@
                 <div class="project-info" onclick="openProject('${p.id}')">
                     <div class="project-title">${p.is_pinned ? '📌 ' : ''}${p.title}</div>
                     <div class="project-meta">🗓 <b>${p.date_scout || '-'}</b></div>
-                    <div style="margin-top:5px;">${(p.tags || []).map(t => {
+                    <div style="margin-top:8px;">${(p.tags || []).map(t => {
                         const [n, c] = t.split(':');
                         return `<span class="tag-pill tag-${c || 'gray'}">${n}</span>`;
                     }).join('')}</div>
@@ -108,7 +137,15 @@
                     <div class="menu-item" style="color:red" onclick="updateStatus('${p.id}', 'trash')">🗑 В корзину</div>
                 </div>
             </div>
-        `).join('') || '<p style="color:#999; margin-top:40px;">Пусто</p>';
+        `).join('') || '<p style="color:#999; margin-top:50px;">Здесь пока ничего нет</p>';
+    }
+
+    function switchTab(t) {
+        currentTab = t;
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('t-'+t).classList.add('active');
+        document.getElementById('addBtn').classList.toggle('hidden', t === 'trash');
+        loadProjects();
     }
 
     function selectColor(c, el) {
@@ -143,16 +180,10 @@
         loadProjects();
     }
 
-    function switchTab(t) {
-        currentTab = t;
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.getElementById('t-'+t).classList.add('active');
-        loadProjects();
-    }
-
     function createNewProject() {
         currentId = null; tempTags = [];
-        document.getElementById('pTitle').value = ''; document.getElementById('pDate').value = '';
+        document.getElementById('pTitle').value = ''; 
+        document.getElementById('pDate').value = '';
         renderTempTags();
         document.getElementById('mainView').classList.add('hidden');
         document.getElementById('editorView').classList.remove('hidden');
@@ -183,9 +214,10 @@
 
     function toggleMenu(e, id) {
         e.stopPropagation();
+        if (openMenuId && openMenuId !== id) document.getElementById('menu-'+openMenuId).classList.add('hidden');
         const m = document.getElementById('menu-'+id);
         m.classList.toggle('hidden');
-        openMenuId = id;
+        openMenuId = m.classList.contains('hidden') ? null : id;
     }
 
     function closeEditor() {
@@ -194,7 +226,8 @@
         loadProjects();
     }
 
-    window.onclick = () => { if(openMenuId) document.getElementById('menu-'+openMenuId).classList.add('hidden'); };
+    window.onclick = () => { if(openMenuId) { document.getElementById('menu-'+openMenuId).classList.add('hidden'); openMenuId = null; } };
+    
     loadProjects();
 </script>
 </body>
