@@ -27,7 +27,7 @@
         .main-input { width: 100%; padding: 16px; border: 1px solid #efefef; border-radius: 14px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; }
         
         .color-picker { display: flex; gap: 15px; margin-top: 12px; justify-content: flex-start; align-items: center; }
-        .color-btn { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .color-btn { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; box-sizing: content-box; }
         .color-btn.active { border-color: #000; transform: scale(1.2); }
         
         .tag-red { background: #ff3b30; } .tag-yellow { background: #ffcc00; }
@@ -46,7 +46,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 16:22 (Tbilisi)</div>
+<div class="version-tag">v. 30.04 16:30 (Tbilisi)</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -84,10 +84,10 @@
             <span class="input-label">Тег</span>
             <input type="text" id="pTagText" class="main-input" placeholder="Напр: СРОЧНО" maxlength="12">
             <div class="color-picker">
-                <div class="color-btn tag-red active" onclick="setTagColor('#ff3b30', this)"></div>
-                <div class="color-btn tag-yellow" onclick="setTagColor('#ffcc00', this)"></div>
-                <div class="color-btn tag-green" onclick="setTagColor('#34c759', this)"></div>
-                <div class="color-btn tag-gray" onclick="setTagColor('#8e8e93', this)"></div>
+                <div class="color-btn tag-red active" data-color="#ff3b30" onclick="setTagColor('#ff3b30', this)"></div>
+                <div class="color-btn tag-yellow" data-color="#ffcc00" onclick="setTagColor('#ffcc00', this)"></div>
+                <div class="color-btn tag-green" data-color="#34c759" onclick="setTagColor('#34c759', this)"></div>
+                <div class="color-btn tag-gray" data-color="#8e8e93" onclick="setTagColor('#8e8e93', this)"></div>
             </div>
         </div>
     </div>
@@ -151,7 +151,11 @@
     function setTagColor(color, el) {
         selectedColor = color;
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
+        if (el) el.classList.add('active');
+        else {
+            const btn = document.querySelector(`.color-btn[data-color="${color}"]`);
+            if (btn) btn.classList.add('active');
+        }
     }
 
     document.getElementById('pDate').addEventListener('input', function (e) {
@@ -182,7 +186,7 @@
     function createNewProject() {
         currentEditId = null;
         ['pTitle', 'pDate', 'pAddress', 'pMapUrl', 'pTime', 'pTagText'].forEach(id => document.getElementById(id).value = '');
-        setTagColor('#ff3b30', document.querySelector('.tag-red'));
+        setTagColor('#ff3b30', null);
         showView('editorView');
     }
 
@@ -202,16 +206,7 @@
         };
 
         const { error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload });
-
-        if (!error) {
-            document.getElementById('finalTitle').innerText = payload.title;
-            document.getElementById('finalDate').innerText = `🗓 ${payload.date_scout || 'дд.мм'}`;
-            const addr = document.getElementById('finalAddress');
-            addr.innerText = payload.location_address || 'Открыть карту';
-            addr.href = payload.map_url || `https://maps.google.com/?q=${encodeURIComponent(payload.location_address)}`;
-            document.getElementById('finalTime').innerText = payload.meeting_time || '--:--';
-            showView('detailsView');
-        }
+        if (!error) showView('mainView');
     }
 
     async function loadProjects() {
@@ -239,12 +234,7 @@
             document.getElementById('pMapUrl').value = data.map_url || '';
             document.getElementById('pTime').value = data.meeting_time || '';
             document.getElementById('pTagText').value = data.tag_text || '';
-            
-            if (data.tag_color) {
-                const colors = {'#ff3b30': '.tag-red', '#ffcc00': '.tag-yellow', '#34c759': '.tag-green', '#8e8e93': '.tag-gray'};
-                const btnClass = colors[data.tag_color];
-                if (btnClass) setTagColor(data.tag_color, document.querySelector(btnClass));
-            }
+            setTagColor(data.tag_color || '#ff3b30', null);
             showView('editorView');
         }
     }
