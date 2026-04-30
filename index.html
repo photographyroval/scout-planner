@@ -6,8 +6,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; }
-        .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10000; pointer-events: none; font-weight: 600; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10001; pointer-events: none; font-weight: 600; }
         
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 10px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
         h2 { font-size: 20px; margin: 10px 0; font-weight: 800; }
@@ -22,25 +22,26 @@
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; }
         
-        .input-group { margin-bottom: 25px; width: 100%; max-width: 350px; }
+        .input-group { margin-bottom: 20px; width: 100%; max-width: 350px; }
         .input-label { font-size: 13px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; text-align: left; }
         
-        .main-input { width: 100%; padding: 18px; border: 1px solid #efefef; border-radius: 16px; font-size: 17px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; }
+        .main-input { width: 100%; padding: 16px; border: 1px solid #efefef; border-radius: 14px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; }
         .main-input:focus { border-color: #007aff; background: #fff; }
 
         .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #f9f9f9; }
         .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; }
         
         .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; text-align: left; }
-        .address-link { color: #007aff; text-decoration: none; font-weight: 700; font-size: 17px; word-break: break-all; }
+        .address-link { color: #007aff; text-decoration: none; font-weight: 700; font-size: 17px; word-break: break-word; }
         
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="version-tag" id="dynamicVersion">v. --.-- --:-- (Tbilisi)</div>
+<div class="version-tag">v. 30.04 14:46 (Tbilisi)</div>
 
+<!-- ГЛАВНЫЙ ЭКРАН -->
 <div id="mainView">
     <div class="header-sticky">
         <h2>Мои Проекты</h2>
@@ -54,34 +55,40 @@
     <div class="container" id="projectList"></div>
 </div>
 
+<!-- ШАГ 1: ОСНОВНОЕ -->
 <div id="editorView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← Отмена</button>
         <button class="nav-btn" onclick="showView('locationView')" style="color: #34c759;">Далее</button>
     </div>
     <div class="container">
-        <h3 style="font-size: 28px; font-weight: 800; width: 100%; margin-bottom: 35px; text-align: left;">Основное</h3>
+        <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 30px; text-align: left;">Основное</h3>
         <div class="input-group">
             <span class="input-label">Название проекта</span>
-            <input type="text" id="pTitle" class="main-input" placeholder="Название">
+            <input type="text" id="pTitle" class="main-input" placeholder="Например: Съемка в Старом городе">
         </div>
         <div class="input-group">
             <span class="input-label">Дата</span>
-            <input type="text" id="pDate" class="main-input" placeholder="дд.мм" maxlength="5" inputmode="numeric">
+            <input type="text" id="pDate" class="main-input" placeholder="30.04" maxlength="5">
         </div>
     </div>
 </div>
 
+<!-- ШАГ 2: СБОР -->
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
         <button class="nav-btn" onclick="finalSave()" style="color: #34c759;">Сохранить</button>
     </div>
     <div class="container">
-        <h3 style="font-size: 28px; font-weight: 800; width: 100%; margin-bottom: 35px; text-align: left;">Сбор</h3>
+        <h3 style="font-size: 26px; font-weight: 800; width: 100%; margin-bottom: 30px; text-align: left;">Сбор</h3>
         <div class="input-group">
-            <span class="input-label">Место сбора (адрес)</span>
-            <input type="text" id="pAddress" class="main-input" placeholder="Введите адрес">
+            <span class="input-label">Место сбора (текст)</span>
+            <input type="text" id="pAddress" class="main-input" placeholder="ул. Леселидзе, 5">
+        </div>
+        <div class="input-group">
+            <span class="input-label">Ссылка на карту (URL)</span>
+            <input type="text" id="pMapUrl" class="main-input" placeholder="https://maps.app.goo.gl/...">
         </div>
         <div class="input-group">
             <span class="input-label">Время сбора</span>
@@ -90,6 +97,7 @@
     </div>
 </div>
 
+<!-- ФИНАЛЬНЫЙ ПРОСМОТР -->
 <div id="detailsView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← К проектам</button>
@@ -113,18 +121,6 @@
 </div>
 
 <script>
-    // Авто-тайминг версии по Тбилиси (UTC+4)
-    function setVersionTime() {
-        const now = new Date();
-        const tbilisiTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (4 * 3600000));
-        const d = String(tbilisiTime.getDate()).padStart(2, '0');
-        const m = String(tbilisiTime.getMonth() + 1).padStart(2, '0');
-        const hh = String(tbilisiTime.getHours()).padStart(2, '0');
-        const mm = String(tbilisiTime.getMinutes()).padStart(2, '0');
-        document.getElementById('dynamicVersion').innerText = `v. ${d}.${m} ${hh}:${mm} (Tbilisi)`;
-    }
-    setVersionTime();
-
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -135,7 +131,13 @@
     let currentEditId = null;
 
     function showView(v) {
-        document.querySelectorAll('body > div[id]').forEach(d => d.classList.add('hidden'));
+        // Прячем все корневые экраны
+        document.getElementById('mainView').classList.add('hidden');
+        document.getElementById('editorView').classList.add('hidden');
+        document.getElementById('locationView').classList.add('hidden');
+        document.getElementById('detailsView').classList.add('hidden');
+        
+        // Показываем нужный
         document.getElementById(v).classList.remove('hidden');
         if (v === 'mainView') loadProjects();
     }
@@ -150,7 +152,7 @@
 
     function createNewProject() {
         currentEditId = null;
-        ['pTitle', 'pDate', 'pAddress', 'pTime'].forEach(id => document.getElementById(id).value = '');
+        ['pTitle', 'pDate', 'pAddress', 'pMapUrl', 'pTime'].forEach(id => document.getElementById(id).value = '');
         showView('editorView');
     }
 
@@ -163,6 +165,7 @@
             title: title,
             date_scout: document.getElementById('pDate').value,
             location_address: document.getElementById('pAddress').value.trim(),
+            map_url: document.getElementById('pMapUrl').value.trim(),
             meeting_time: document.getElementById('pTime').value,
             status: 'active'
         };
@@ -172,9 +175,12 @@
         if (!error) {
             document.getElementById('finalTitle').innerText = payload.title;
             document.getElementById('finalDate').innerText = `🗓 ${payload.date_scout || 'дд.мм'}`;
+            
             const addr = document.getElementById('finalAddress');
-            addr.innerText = payload.location_address || 'Адрес не указан';
-            addr.href = `https://maps.google.com/?q=${encodeURIComponent(payload.location_address)}`;
+            addr.innerText = payload.location_address || 'Открыть карту';
+            // Приоритет ссылке из поля, если её нет — поиск по адресу
+            addr.href = payload.map_url || `https://maps.google.com/?q=${encodeURIComponent(payload.location_address)}`;
+            
             document.getElementById('finalTime').innerText = payload.meeting_time || '--:--';
             showView('detailsView');
         }
@@ -201,367 +207,10 @@
             document.getElementById('pTitle').value = data.title;
             document.getElementById('pDate').value = data.date_scout;
             document.getElementById('pAddress').value = data.location_address || '';
+            document.getElementById('pMapUrl').value = data.map_url || '';
             document.getElementById('pTime').value = data.meeting_time || '';
             showView('editorView');
         }
-    }
-
-    loadProjects();
-</script>
-</body>
-</html>        .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #f9f9f9; }
-        .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; }
-        
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; text-align: left; }
-        .address-link { color: #007aff; text-decoration: none; font-weight: 700; font-size: 17px; word-break: break-word; }
-        
-        .hidden { display: none !important; }
-    </style>
-</head>
-<body>
-
-<!-- Тайминг по Тбилиси -->
-<div class="version-tag" id="appVersion">v. 30.04 14:34 (Tbilisi)</div>
-
-<div id="mainView">
-    <div class="header-sticky">
-        <h2>Мои Проекты</h2>
-        <div class="tabs">
-            <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
-            <div id="t-hidden" class="tab" onclick="switchTab('hidden')">🙈 Скрытые</div>
-            <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
-        </div>
-        <button id="addBtn" class="btn-black" onclick="createNewProject()">+ Создать план</button>
-    </div>
-    <div class="container" id="projectList"></div>
-</div>
-
-<div id="editorView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← Отмена</button>
-        <button class="nav-btn" onclick="goToLocationStep()" style="color: #34c759;">Далее</button>
-    </div>
-    <div class="container">
-        <h3 style="font-size: 28px; font-weight: 800; width: 100%; margin-bottom: 35px; text-align: left;">Основное</h3>
-        <div class="input-group">
-            <span class="input-label">Название проекта</span>
-            <input type="text" id="pTitle" class="main-input" placeholder="Название">
-        </div>
-        <div class="input-group">
-            <span class="input-label">Дата</span>
-            <input type="text" id="pDate" class="main-input" placeholder="дд.мм" maxlength="5" inputmode="numeric">
-        </div>
-    </div>
-</div>
-
-<div id="locationView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="finalSave()" style="color: #34c759;">Сохранить</button>
-    </div>
-    <div class="container">
-        <h3 style="font-size: 28px; font-weight: 800; width: 100%; margin-bottom: 35px; text-align: left;">Сбор</h3>
-        <div class="input-group">
-            <span class="input-label">Место сбора (текст станет ссылкой)</span>
-            <input type="text" id="pAddress" class="main-input" placeholder="Адрес или ссылка на карты">
-        </div>
-        <div class="input-group">
-            <span class="input-label">Время сбора</span>
-            <input type="time" id="pTime" class="main-input">
-        </div>
-    </div>
-</div>
-
-<div id="detailsView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← К проектам</button>
-    </div>
-    <div class="container">
-        <div style="width: 100%; max-width: 350px; text-align: left;">
-            <h2 id="finalTitle" style="font-size: 28px; margin-bottom: 5px;"></h2>
-            <p id="finalDate" style="color: #888; font-weight: 600; margin-bottom: 30px;"></p>
-            
-            <div style="background: #f2f2f7; padding: 25px; border-radius: 24px;">
-                <div style="margin-bottom: 20px;">
-                    <span style="font-size: 11px; color: #8e8e93; display: block; letter-spacing: 0.5px; margin-bottom: 5px;">МЕСТО СБОРА</span>
-                    <a id="finalAddress" href="#" class="address-link" target="_blank"></a>
-                </div>
-                <div>
-                    <span style="font-size: 11px; color: #8e8e93; display: block; letter-spacing: 0.5px; margin-bottom: 5px;">ВРЕМЯ</span>
-                    <span id="finalTime" style="font-weight: 700; font-size: 20px;"></span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const tg = window.Telegram.WebApp;
-    const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
-
-    let currentTab = 'active';
-    let currentEditId = null;
-
-    // Маска даты
-    document.getElementById('pDate').addEventListener('input', function (e) {
-        let v = e.target.value.replace(/\D/g, ''); 
-        if (v.length >= 2) {
-            let d = Math.min(parseInt(v.substring(0, 2)), 31) || '01';
-            v = d.toString().padStart(2, '0') + v.substring(2);
-        }
-        if (v.length >= 4) {
-            let m = Math.min(parseInt(v.substring(2, 4)), 12) || '01';
-            v = v.substring(0, 2) + m.toString().padStart(2, '0');
-        }
-        if (v.length > 2) v = v.substring(0, 2) + '.' + v.substring(2, 4);
-        e.target.value = v;
-    });
-
-    function showView(v) {
-        document.querySelectorAll('body > div[id]').forEach(d => { if(d.id !== 'appVersion') d.classList.add('hidden'); });
-        document.getElementById(v).classList.remove('hidden');
-        if (v === 'mainView') loadProjects();
-    }
-
-    function switchTab(t) {
-        currentTab = t;
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.getElementById('t-' + t).classList.add('active');
-        document.getElementById('addBtn').classList.toggle('hidden', t !== 'active');
-        loadProjects();
-    }
-
-    function createNewProject() {
-        currentEditId = null;
-        ['pTitle', 'pDate', 'pAddress', 'pTime'].forEach(id => document.getElementById(id).value = '');
-        showView('editorView');
-    }
-
-    function goToLocationStep() {
-        if (!document.getElementById('pTitle').value.trim()) return alert("Введите название проекта");
-        showView('locationView');
-    }
-
-    async function finalSave() {
-        const payload = {
-            user_id: uid,
-            title: document.getElementById('pTitle').value.trim(),
-            date_scout: document.getElementById('pDate').value,
-            location_address: document.getElementById('pAddress').value.trim(),
-            meeting_time: document.getElementById('pTime').value,
-            status: 'active'
-        };
-
-        const { data, error } = await client.from('projects').upsert({
-            id: currentEditId || undefined,
-            ...payload
-        }).select().single();
-
-        if (!error) {
-            document.getElementById('finalTitle').innerText = payload.title;
-            document.getElementById('finalDate').innerText = `🗓 ${payload.date_scout || 'дд.мм'}`;
-            
-            const addr = document.getElementById('finalAddress');
-            addr.innerText = payload.location_address || 'Не указано';
-            // Если в поле просто текст, делаем поиск в картах, если ссылка - ведем по ссылке
-            addr.href = payload.location_address.startsWith('http') ? payload.location_address : `https://maps.google.com/?q=${encodeURIComponent(payload.location_address)}`;
-            
-            document.getElementById('finalTime').innerText = payload.meeting_time || '--:--';
-            showView('detailsView');
-        }
-    }
-
-    async function loadProjects() {
-        const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
-        const list = document.getElementById('projectList');
-        list.innerHTML = data?.map(p => `
-            <div class="project-card" onclick="openEdit('${p.id}')">
-                <div style="flex:1">
-                    <div style="font-weight:800; font-size:17px;">${p.title}</div>
-                    <div style="font-size:13px; color:#888; margin-top:5px;">🗓 ${p.date_scout || 'дд.мм'}</div>
-                </div>
-                <div style="color:#ddd; font-size:22px;">›</div>
-            </div>
-        `).join('') || '<p style="color:#bbb; margin-top:50px;">Нет планов</p>';
-    }
-
-    async function openEdit(id) {
-        const { data } = await client.from('projects').select('*').eq('id', id).single();
-        if (data) {
-            currentEditId = data.id;
-            document.getElementById('pTitle').value = data.title;
-            document.getElementById('pDate').value = data.date_scout;
-            document.getElementById('pAddress').value = data.location_address || '';
-            document.getElementById('pTime').value = data.meeting_time || '';
-            showView('editorView');
-        }
-    }
-
-    loadProjects();
-</script>
-</body>
-</html>        
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; text-align: left; }
-        .hidden { display: none !important; }
-    </style>
-</head>
-<body>
-
-<div class="version-tag" id="appVersion">v. --:--</div>
-
-<div id="mainView">
-    <div class="header-sticky">
-        <h2>Мои Проекты</h2>
-        <div class="tabs">
-            <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
-            <div id="t-hidden" class="tab" onclick="switchTab('hidden')">🙈 Скрытые</div>
-            <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
-        </div>
-        <button class="btn-black" onclick="createNewProject()">+ Создать план</button>
-    </div>
-    <div class="container" id="projectList"></div>
-</div>
-
-<div id="editorView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="handleBack()" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="saveAndContinue()" style="color: #34c759;">Сохранить</button>
-    </div>
-    <div class="container">
-        <h3 style="font-size: 28px; font-weight: 800; width: 100%; margin: 10px 0 35px; text-align: left;">Что планируем?</h3>
-        <div class="editor-form">
-            <div class="input-group">
-                <span class="input-label">Название проекта (видно всем)</span>
-                <input type="text" id="pTitle" class="main-input" placeholder="Название">
-            </div>
-            <div class="input-group">
-                <span class="input-label">Дата</span>
-                <input type="text" id="pDate" class="main-input" placeholder="дд.мм" maxlength="5" inputmode="numeric">
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="detailsView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← К проектам</button>
-    </div>
-    <div class="container">
-        <h3 id="detailTitle" style="margin-top: 40px; font-weight: 800; font-size: 24px;"></h3>
-        <p style="color: #999; margin-top: 10px;">План успешно создан.</p>
-    </div>
-</div>
-
-<script>
-    const UPDATE_TIME = "30.04 16:15"; 
-    document.getElementById('appVersion').innerText = `v. ${UPDATE_TIME}`;
-
-    const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const tg = window.Telegram.WebApp;
-    const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
-
-    let currentTab = 'active';
-    let currentEditId = null;
-
-    // Исправленная маска даты
-    document.getElementById('pDate').addEventListener('input', function (e) {
-        let v = e.target.value.replace(/\D/g, ''); 
-        if (v.length >= 2) {
-            let day = parseInt(v.substring(0, 2));
-            if (day > 31) day = 31;
-            if (v.substring(0, 2) === '00') day = '01';
-            v = day.toString().padStart(2, '0') + v.substring(2);
-        }
-        if (v.length >= 4) {
-            let month = parseInt(v.substring(2, 4));
-            if (month > 12) month = 12;
-            if (v.substring(2, 4) === '00') month = '01';
-            v = v.substring(0, 2) + month.toString().padStart(2, '0');
-        }
-        if (v.length > 2) v = v.substring(0, 2) + '.' + v.substring(2, 4);
-        e.target.value = v;
-    });
-
-    async function loadProjects() {
-        const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
-        const list = document.getElementById('projectList');
-        list.innerHTML = data?.map(p => `
-            <div class="project-card" onclick="openEdit('${p.id}')">
-                <div style="flex:1">
-                    <div style="font-weight:800; font-size:17px;">${p.title}</div>
-                    <div style="font-size:13px; color:#888; margin-top:5px;">🗓 ${p.date_scout || 'дд.мм'}</div>
-                </div>
-                <div style="color:#ddd; font-size:22px;">›</div>
-            </div>
-        `).join('') || '<p style="color:#bbb; margin-top:50px;">Список пуст</p>';
-    }
-
-    function createNewProject() {
-        currentEditId = null;
-        document.getElementById('pTitle').value = '';
-        document.getElementById('pDate').value = '';
-        showView('editorView');
-    }
-
-    async function openEdit(id) {
-        const { data } = await client.from('projects').select('*').eq('id', id).single();
-        if (data) {
-            currentEditId = data.id;
-            document.getElementById('pTitle').value = data.title;
-            document.getElementById('pDate').value = data.date_scout || '';
-            showView('editorView');
-        }
-    }
-
-    function handleBack() {
-        if (document.getElementById('pTitle').value.trim().length > 0 && !currentEditId) {
-            if (confirm("Выйти без сохранения?")) showView('mainView');
-        } else {
-            showView('mainView');
-        }
-    }
-
-    async function saveAndContinue() {
-        const title = document.getElementById('pTitle').value.trim();
-        const date = document.getElementById('pDate').value;
-        if (!title) return alert("Введите название");
-
-        const { error } = await client.from('projects').upsert({
-            id: currentEditId || undefined,
-            user_id: uid,
-            title: title,
-            date_scout: date,
-            status: 'active'
-        });
-
-        if (!error) {
-            document.getElementById('detailTitle').innerText = title;
-            showView('detailsView');
-        }
-    }
-
-    function showView(v) {
-        document.getElementById('mainView').classList.add('hidden');
-        document.getElementById('editorView').classList.add('hidden');
-        document.getElementById('detailsView').classList.add('hidden');
-        document.getElementById(v).classList.remove('hidden');
-        if (v === 'mainView') loadProjects();
-    }
-
-    // ИСПРАВЛЕННОЕ ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
-    function switchTab(t) {
-        currentTab = t;
-        // 1. Убираем класс active у ВСЕХ вкладок
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        // 2. Добавляем active только той, на которую нажали
-        document.getElementById('t-' + t).classList.add('active');
-        
-        loadProjects();
     }
 
     loadProjects();
