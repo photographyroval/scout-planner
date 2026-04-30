@@ -7,6 +7,22 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; text-align: center; }
+        
+        /* Временная плашка версии */
+        .version-tag {
+            position: fixed;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-family: monospace;
+            z-index: 9999;
+            pointer-events: none; /* Чтобы не мешала нажимать на кнопки под ней */
+        }
+
         h2 { font-size: 22px; margin: 10px 0; font-weight: 800; }
         
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding-bottom: 10px; border-bottom: 1px solid #f2f2f2; }
@@ -45,7 +61,6 @@
             font-size: 14px; font-weight: 600;
         }
         .action-btn { cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: 0.2s; }
-        .action-btn:active { background: rgba(255,255,255,0.1); }
 
         .btn-main { background: #000; color: #fff; border: none; padding: 14px; border-radius: 14px; width: 100%; font-weight: 700; font-size: 16px; cursor: pointer; }
         .tag-pill { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #fff; margin-right: 4px; display: inline-block; text-transform: uppercase; }
@@ -57,6 +72,9 @@
 </head>
 <body>
 
+<!-- Та самая плашка -->
+<div class="version-tag" id="appVersion">v. --:--</div>
+
 <div id="mainView">
     <div class="header-sticky">
         <h2>Мои Проекты</h2>
@@ -67,7 +85,6 @@
         </div>
         <button id="addBtn" class="btn-main" onclick="createNewProject()">+ Создать план</button>
     </div>
-
     <div id="projectList" style="margin-top: 15px; padding-bottom: 100px;"></div>
 </div>
 
@@ -79,7 +96,6 @@
     <span id="actTrash" class="action-btn" style="color: #ff453a;" onclick="bulkUpdate('trash')">🗑 Удалить</span>
 </div>
 
-<!-- Редактор -->
 <div id="editorView" class="hidden" style="padding: 20px; text-align: left;">
     <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 30px;">
         <button onclick="closeEditor()" style="background:none; border:none; font-size:16px; color:#666;">Отмена</button>
@@ -89,10 +105,13 @@
     <input type="text" id="pTitle" style="width:100%; padding:15px; border:1px solid #eee; border-radius:12px; margin-bottom:15px; font-size:18px; font-weight:700;" placeholder="Название">
     <input type="text" id="pDate" style="width:100%; padding:15px; border:1px solid #eee; border-radius:12px; margin-bottom:15px;" placeholder="Дата съемки">
     <div id="tempTags" style="margin-bottom: 15px;"></div>
-    <!-- Добавление тегов можно вернуть сюда при необходимости -->
 </div>
 
 <script>
+    // МЕНЯЙ ЭТУ СТРОКУ ПРИ КАЖДОМ ОБНОВЛЕНИИ
+    const UPDATE_TIME = "30.04 14:10"; 
+    document.getElementById('appVersion').innerText = `v. ${UPDATE_TIME}`;
+
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -104,19 +123,14 @@
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
     async function loadProjects() {
-        const { data } = await client.from('projects')
-            .select('*')
-            .eq('user_id', uid)
-            .eq('status', currentTab)
-            .order('created_at', {ascending: false});
-
+        const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
         list.innerHTML = data.map(p => `
             <div class="project-card ${selectedIds.has(p.id) ? 'selected' : ''}" id="card-${p.id}" onclick="toggleSelect('${p.id}')">
                 <div class="check-circle"></div>
                 <div class="project-info">
                     <div class="project-title">${p.title}</div>
-                    <div style="font-size:13px; color:#888">🗓 ${p.date_scout || 'Дата не указана'}</div>
+                    <div style="font-size:13px; color:#888">🗓 ${p.date_scout || 'Нет даты'}</div>
                     <div style="margin-top:6px;">${(p.tags || []).map(t => {
                         const [n, c] = t.split(':');
                         return `<span class="tag-pill tag-${c}">${n}</span>`;
@@ -124,13 +138,12 @@
                 </div>
                 <div class="edit-icon" onclick="event.stopPropagation(); openEdit('${p.id}')">✎</div>
             </div>
-        `).join('') || `<p style="color:#bbb; margin-top:60px;">${currentTab === 'trash' ? 'Корзина пуста' : 'Нет проектов'}</p>`;
+        `).join('') || `<p style="color:#bbb; margin-top:60px;">Пусто</p>`;
     }
 
     function toggleSelect(id) {
         if (selectedIds.has(id)) selectedIds.delete(id);
         else selectedIds.add(id);
-        
         document.getElementById(`card-${id}`).classList.toggle('selected');
         updateActionBar();
     }
@@ -138,12 +151,9 @@
     function updateActionBar() {
         const bar = document.getElementById('multiAction');
         const count = document.getElementById('selectCount');
-        
         if (selectedIds.size > 0) {
             bar.classList.remove('hidden');
             count.innerText = selectedIds.size;
-            
-            // Логика кнопок
             document.getElementById('actRestore').classList.toggle('hidden', currentTab === 'active');
             document.getElementById('actHide').classList.toggle('hidden', currentTab !== 'active');
         } else {
@@ -163,16 +173,12 @@
         currentTab = t;
         selectedIds.clear();
         updateActionBar();
-        
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById('t-'+t).classList.add('active');
-        
-        // Кнопка создать — только в Активных
         document.getElementById('addBtn').classList.toggle('hidden', t !== 'active');
         loadProjects();
     }
 
-    // Редактор
     function createNewProject() {
         currentEditId = null;
         document.getElementById('pTitle').value = '';
@@ -191,18 +197,13 @@
     }
 
     async function saveProject() {
-        const title = document.getElementById('pTitle').value || "Без названия";
-        const date = document.getElementById('pDate').value;
-        
         const payload = {
             user_id: uid,
-            title: title,
-            date_scout: date,
-            status: 'active' // Всегда активный при создании/правке
+            title: document.getElementById('pTitle').value || "Без названия",
+            date_scout: document.getElementById('pDate').value,
+            status: 'active'
         };
-
         if (currentEditId) payload.id = currentEditId;
-
         await client.from('projects').upsert(payload);
         closeEditor();
     }
@@ -213,10 +214,7 @@
         document.getElementById(v).classList.remove('hidden');
     }
 
-    function closeEditor() {
-        showView('mainView');
-        loadProjects();
-    }
+    function closeEditor() { showView('mainView'); loadProjects(); }
 
     loadProjects();
 </script>
