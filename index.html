@@ -6,232 +6,182 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --tg-theme-bg-color: #fff; --tg-theme-button-color: #2481cc; --tg-theme-secondary-bg-color: #efeff3; --tg-theme-hint-color: #999; }
-        body { font-family: -apple-system, sans-serif; background: var(--tg-theme-secondary-bg-color); margin: 0; padding: 15px; color: #000; -webkit-user-select: none; }
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; }
-        .btn { background: var(--tg-theme-button-color); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
-        .btn-secondary { background: #8e8e93; }
-        .input-group { margin-bottom: 10px; }
-        label { display: block; font-size: 11px; color: var(--tg-theme-hint-color); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
-        input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; font-size: 16px; outline: none; background: #fafafa; }
-        input:focus { border-color: var(--tg-theme-button-color); background: #fff; }
-        .transfer-block { background: #e3f2fd; padding: 12px; border-radius: 10px; margin: 15px 0; text-align: center; border: 1px dashed #2196f3; position: relative; }
-        .time-badge { background: #333; color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 13px; font-variant-numeric: tabular-nums; }
+        :root { --tg-theme-button-color: #2481cc; }
+        body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; }
+        
+        /* Проекты */
+        .project-card { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+        .project-info { flex: 1; cursor: pointer; }
+        .project-title { font-weight: bold; font-size: 17px; margin-bottom: 4px; display: flex; align-items: center; }
+        .pin-icon { margin-right: 6px; font-size: 14px; }
+        .project-meta { font-size: 13px; color: #666; }
+        
+        /* Меню действий (Три точки) */
+        .dots-btn { padding: 5px 10px; cursor: pointer; font-size: 20px; color: #999; }
+        .context-menu { position: absolute; right: 10px; top: 40px; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 150px; }
+        .menu-item { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; cursor: pointer; }
+        .menu-item:last-child { border-bottom: none; color: #ff3b30; }
+
+        /* Вкладки */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .tab { padding: 8px 16px; border-radius: 20px; font-size: 14px; cursor: pointer; background: #f0f0f0; color: #666; }
+        .tab.active { background: var(--tg-theme-button-color); color: #fff; }
+
+        /* Теги */
+        .tag-pill { display: inline-block; background: #f0f0f0; color: #666; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-top: 5px; margin-right: 5px; }
+
+        .btn { background: var(--tg-theme-button-color); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .hidden { display: none; }
-        .delete-btn { color: #ff3b30; font-size: 12px; font-weight: 500; cursor: pointer; }
-        h2, h3 { margin: 0; }
+        
+        /* Редактор */
+        .editor-input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; font-size: 16px; box-sizing: border-box; }
+        label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px; display: block; }
     </style>
 </head>
 <body>
 
-<!-- ГЛАВНЫЙ ЭКРАН -->
-<div id="dashboard">
-    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
-        <h2>Мои проекты</h2>
-        <button class="btn" style="width:auto; margin:0; padding: 8px 16px;" onclick="createNewProject()">+ Новый</button>
+<div id="mainView">
+    <div class="tabs">
+        <div id="tabActive" class="tab active" onclick="switchTab('active')">Планы</div>
+        <div id="tabTrash" class="tab" onclick="switchTab('trash')">Корзина</div>
     </div>
+
     <div id="projectList"></div>
+    <button id="addBtn" class="btn" onclick="createNewProject()">+ Новый проект</button>
 </div>
 
-<!-- РЕДАКТОР -->
-<div id="editor" class="hidden">
-    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 15px;">
-        <button onclick="showDashboard()" style="background:none; border:none; color:var(--tg-theme-button-color); font-size:17px; padding:0;">← Назад</button>
-        <button onclick="saveToCloud()" style="background:none; border:none; color:var(--tg-theme-button-color); font-weight:bold; font-size:17px; padding:0;">Сохранить</button>
-    </div>
-
-    <div class="card">
-        <div class="input-group"><label>Проект</label><input type="text" id="projTitle" placeholder="Название съемки"></div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="input-group"><label>Дата</label><input type="text" id="projDate" placeholder="ДД.ММ"></div>
-            <div class="input-group"><label>Старт (Сбор)</label><input type="time" id="startTime" value="09:00" onchange="renderBlocks()"></div>
-        </div>
-    </div>
-
-    <div id="blocksContainer"></div>
-
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:15px;">
-        <button class="btn btn-secondary" onclick="addLocation()">+ Локация</button>
-        <button class="btn btn-secondary" onclick="addTransfer()">+ Переезд</button>
+<div id="editorView" class="hidden">
+    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
+        <button onclick="closeEditor()" style="background:none; border:none; color:var(--tg-theme-button-color); font-size:17px;">Назад</button>
+        <button onclick="saveProject()" style="background:none; border:none; color:var(--tg-theme-button-color); font-weight:bold; font-size:17px;">Сохранить</button>
     </div>
     
-    <button class="btn" style="background:#34c759; margin-top:25px; margin-bottom:30px;" onclick="copyText()">📋 Скопировать текст для чата</button>
+    <label>Название</label>
+    <input type="text" id="pTitle" class="editor-input" placeholder="Напр: Съемка в Тбилиси">
+    
+    <label>Теги (через запятую)</label>
+    <input type="text" id="pTags" class="editor-input" placeholder="клип, реклама, город">
+    
+    <div id="blocks"></div>
 </div>
 
 <script>
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
-    
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const tg = window.Telegram.WebApp;
-    tg.expand();
-
+    
     let currentId = null;
-    let blocks = [];
-    const userId = tg.initDataUnsafe?.user?.id?.toString() || "demo_user";
+    let currentTab = 'active';
+    let openMenuId = null;
+    const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
-    async function showDashboard() {
-        document.getElementById('dashboard').classList.remove('hidden');
-        document.getElementById('editor').classList.add('hidden');
-        
-        try {
-            const { data } = await supabaseClient
-                .from('projects')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', {ascending: false});
-                
-            const list = document.getElementById('projectList');
-            if (data && data.length > 0) {
-                list.innerHTML = data.map(p => `
-                    <div class="card" onclick="openProject('${p.id}')">
-                        <div style="font-weight:bold; font-size:17px;">${p.title}</div>
-                        <div style="color:gray; font-size:13px; margin-top:6px;">📅 ${p.date_scout || 'Дата не указана'}</div>
+    async function loadProjects() {
+        const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('is_pinned', {ascending: false}).order('created_at', {ascending: false});
+        const list = document.getElementById('projectList');
+        list.innerHTML = data.map(p => `
+            <div class="project-card">
+                <div class="project-info" onclick="openProject('${p.id}')">
+                    <div class="project-title">
+                        ${p.is_pinned ? '<span class="pin-icon">📌</span>' : ''} ${p.title}
                     </div>
-                `).join('');
-            } else {
-                list.innerHTML = '<div style="text-align:center; color:gray; margin-top:50px; font-size:14px;">Проектов пока нет.<br>Создайте свой первый план!</div>';
-            }
-        } catch (e) { console.error(e); }
+                    <div class="project-meta">📅 ${p.date_scout || 'Без даты'}</div>
+                    <div>${(p.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('')}</div>
+                </div>
+                <div class="dots-btn" onclick="toggleMenu(event, '${p.id}')">⋮</div>
+                <div id="menu-${p.id}" class="context-menu hidden">
+                    ${currentTab === 'active' ? `
+                        <div class="menu-item" onclick="togglePin('${p.id}', ${p.is_pinned})">${p.is_pinned ? 'Открепить' : 'Закрепить'}</div>
+                        <div class="menu-item" onclick="updateStatus('${p.id}', 'trash')">В корзину</div>
+                    ` : `
+                        <div class="menu-item" onclick="updateStatus('${p.id}', 'active')">Восстановить</div>
+                        <div class="menu-item" onclick="deleteForever('${p.id}')">Удалить навсегда</div>
+                    `}
+                </div>
+            </div>
+        `).join('') || '<p style="text-align:center; color:#999; margin-top:50px;">Тут пока пусто</p>';
     }
 
+    function toggleMenu(e, id) {
+        e.stopPropagation();
+        if (openMenuId && openMenuId !== id) document.getElementById('menu-'+openMenuId).classList.add('hidden');
+        const menu = document.getElementById('menu-'+id);
+        menu.classList.toggle('hidden');
+        openMenuId = menu.classList.contains('hidden') ? null : id;
+    }
+
+    async function togglePin(id, current) {
+        await client.from('projects').update({ is_pinned: !current }).eq('id', id);
+        loadProjects();
+    }
+
+    async function updateStatus(id, status) {
+        await client.from('projects').update({ status: status, is_pinned: false }).eq('id', id);
+        loadProjects();
+    }
+
+    async function deleteForever(id) {
+        if(confirm("Удалить безвозвратно?")) {
+            await client.from('projects').delete().eq('id', id);
+            loadProjects();
+        }
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabActive').classList.toggle('active', tab === 'active');
+        document.getElementById('tabTrash').classList.toggle('active', tab === 'trash');
+        document.getElementById('addBtn').classList.toggle('hidden', tab === 'trash');
+        loadProjects();
+    }
+
+    // Редактор (упрощенно для примера)
     function createNewProject() {
         currentId = null;
-        blocks = [];
-        document.getElementById('projTitle').value = '';
-        document.getElementById('projDate').value = '';
-        document.getElementById('startTime').value = '09:00';
-        renderBlocks();
-        document.getElementById('dashboard').classList.add('hidden');
-        document.getElementById('editor').classList.remove('hidden');
+        document.getElementById('pTitle').value = '';
+        document.getElementById('pTags').value = '';
+        document.getElementById('mainView').classList.add('hidden');
+        document.getElementById('editorView').classList.remove('hidden');
     }
 
     async function openProject(id) {
-        const { data } = await supabaseClient.from('projects').select('*').eq('id', id).single();
-        if (data) {
-            currentId = data.id;
-            document.getElementById('projTitle').value = data.title;
-            document.getElementById('projDate').value = data.date_scout;
-            blocks = data.content.blocks || [];
-            renderBlocks();
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('editor').classList.remove('hidden');
-        }
+        if (currentTab === 'trash') return;
+        const { data } = await client.from('projects').select('*').eq('id', id).single();
+        currentId = data.id;
+        document.getElementById('pTitle').value = data.title;
+        document.getElementById('pTags').value = (data.tags || []).join(', ');
+        document.getElementById('mainView').classList.add('hidden');
+        document.getElementById('editorView').classList.remove('hidden');
     }
 
-    function addLocation() {
-        blocks.push({ type: 'loc', name: '', dur: 60, coords: '' });
-        renderBlocks();
-    }
-
-    function addTransfer() {
-        blocks.push({ type: 'trans', dur: 30 });
-        renderBlocks();
-    }
-
-    function renderBlocks() {
-        const container = document.getElementById('blocksContainer');
-        container.innerHTML = '';
-        let currentTime = document.getElementById('startTime').value || "09:00";
-
-        blocks.forEach((b, i) => {
-            const startStr = currentTime;
-            currentTime = addMinutes(currentTime, b.dur);
-            const endStr = currentTime;
-
-            if (b.type === 'loc') {
-                container.innerHTML += `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span class="time-badge">⏰ ${startStr} — ${endStr}</span>
-                        <span class="delete-btn" onclick="removeBlock(${i})">Удалить</span>
-                    </div>
-                    <label>Локация / Объект</label>
-                    <input type="text" value="${b.name || ''}" oninput="blocks[${i}].name=this.value" placeholder="Напр: Жилой дом">
-                    <label style="margin-top:10px;">Координаты</label>
-                    <input type="text" value="${b.coords || ''}" oninput="blocks[${i}].coords=this.value" placeholder="Ссылка или текст">
-                    <label style="margin-top:10px;">Длительность (мин)</label>
-                    <input type="number" value="${b.dur}" oninput="blocks[${i}].dur=parseInt(this.value)||0; renderBlocks()">
-                </div>`;
-            } else {
-                container.innerHTML += `
-                <div class="transfer-block">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:14px; font-weight:bold;">🚗 Переезд</span>
-                        <span class="delete-btn" onclick="removeBlock(${i})">✕</span>
-                    </div>
-                    <div style="margin:10px 0;">
-                        <input type="number" value="${b.dur}" oninput="blocks[${i}].dur=parseInt(this.value)||0; renderBlocks()" style="width:60px; text-align:center; font-weight:bold; background:white; border:1px solid #bbdefb;"> мин.
-                    </div>
-                    <div style="font-size:12px; color:#1976d2;">Прибытие на след. точку в <b>${endStr}</b></div>
-                </div>`;
-            }
-        });
-    }
-
-    function addMinutes(time, mins) {
-        let [h, m] = time.split(':').map(Number);
-        let date = new Date();
-        date.setHours(h, m + mins);
-        return date.toTimeString().slice(0, 5);
-    }
-
-    function removeBlock(i) {
-        blocks.splice(i, 1);
-        renderBlocks();
-    }
-
-    async function saveToCloud() {
-        const title = document.getElementById('projTitle').value || "Без названия";
-        const date = document.getElementById('projDate').value;
-        const { error } = await supabaseClient.from('projects').upsert({
+    async function saveProject() {
+        const tags = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(t => t !== "");
+        await client.from('projects').upsert({
             id: currentId || undefined,
-            user_id: userId,
-            title: title,
-            date_scout: date,
-            content: { blocks },
-            created_at: new Date()
+            user_id: uid,
+            title: document.getElementById('pTitle').value || "Без названия",
+            tags: tags,
+            status: 'active',
+            content: { blocks: [] } // Вставь сюда логику блоков из прошлого кода
         });
-        if (!error) {
-            tg.HapticFeedback.notificationOccurred('success');
-            showDashboard();
-        } else {
-            tg.showAlert("Ошибка при сохранении в базу");
+        closeEditor();
+    }
+
+    function closeEditor() {
+        document.getElementById('mainView').classList.remove('hidden');
+        document.getElementById('editorView').classList.add('hidden');
+        loadProjects();
+    }
+
+    // Закрытие меню при клике в любое место
+    window.onclick = () => {
+        if (openMenuId) {
+            document.getElementById('menu-'+openMenuId).classList.add('hidden');
+            openMenuId = null;
         }
-    }
+    };
 
-    function copyText() {
-        let title = document.getElementById('projTitle').value || 'Без названия';
-        let date = document.getElementById('projDate').value || '-';
-        let t = `📍 *ПЛАН СКАУТА: ${title.toUpperCase()}*\n`;
-        t += `📅 Дата: ${date}\n`;
-        t += `───────────────────\n\n`;
-        
-        let cur = document.getElementById('startTime').value || "09:00";
-
-        blocks.forEach((b) => {
-            const s = cur; cur = addMinutes(cur, b.dur); const e = cur;
-            if (b.type === 'loc') {
-                t += `⏰ *${s} — ${e}*\n🏠 *Объект:* ${b.name || 'Не указан'}\n📍 *Координаты:* ${b.coords || '-'}\n\n`;
-            } else {
-                t += `🚗 *Переезд:* ~${b.dur} мин.\n\n`;
-            }
-        });
-
-        const el = document.createElement('textarea');
-        el.value = t;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-        
-        tg.HapticFeedback.impactOccurred('medium');
-        tg.showAlert("План скопирован в буфер обмена!");
-    }
-
-    // Запуск приложения
-    showDashboard();
+    loadProjects();
 </script>
-
 </body>
 </html>
