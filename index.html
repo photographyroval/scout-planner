@@ -9,55 +9,58 @@
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 15px; color: #000; text-align: center; }
         h2 { font-size: 24px; margin: 10px 0 20px; font-weight: 800; }
         
-        .tabs { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 25px; height: 60px; }
+        .tabs { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 25px; height: 70px; }
         
         .tab { 
             font-size: 14px; 
             font-weight: 600; 
             cursor: pointer; 
             color: #999; 
-            padding: 10px 16px; 
-            border-radius: 12px; 
+            padding: 10px 18px; 
+            border-radius: 14px; 
             border: 2px solid transparent;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff;
             display: flex;
             align-items: center;
             gap: 6px;
-            background: #fff;
+            /* Эффект мягкого перетягивания (elastic ease-out) */
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: transform;
         }
 
         .tab.active { 
-            transform: scale(1.15); 
+            transform: scale(1.18); 
             color: #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-        /* Цвета рамок для активных состояний */
+        /* Цвета рамок */
         #t-active.active { border-color: #34c759; color: #34c759; }
         #t-hidden.active { border-color: #8e8e93; color: #8e8e93; }
         #t-trash.active { border-color: #ff3b30; color: #ff3b30; }
 
-        /* Минималистичный текстовый символ глаза */
-        .eye-sym { display: none; font-size: 12px; }
+        /* Перечеркнутый глаз */
+        .eye-sym { display: none; font-size: 14px; }
         #t-hidden.active .eye-sym { display: inline; }
 
-        .project-card { border: 1px solid #eee; border-radius: 14px; padding: 18px; margin-bottom: 15px; position: relative; display: flex; justify-content: space-between; align-items: center; }
-        .project-info { flex: 1; cursor: pointer; }
-        .project-title { font-weight: 800; font-size: 20px; margin-bottom: 4px; }
-        .project-meta { font-size: 15px; font-weight: 700; }
+        /* Карточки */
+        .project-card { border: 1px solid #eee; border-radius: 14px; padding: 18px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s; }
+        .project-info { flex: 1; text-align: left; cursor: pointer; }
+        .project-title { font-weight: 800; font-size: 18px; margin-bottom: 4px; }
         
-        .tag-pill { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; margin: 2px; display: inline-block; }
+        .tag-pill { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; margin-right: 4px; display: inline-block; }
         .tag-gray { background: #8e8e93; } .tag-red { background: #ff3b30; } .tag-green { background: #34c759; } .tag-blue { background: #007aff; } .tag-yellow { background: #ffcc00; color: #000; }
 
-        .btn { background: #000; color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; font-size: 16px; margin-top: 10px; cursor: pointer; }
-        .editor-input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; text-align: center; outline: none; }
+        .btn { background: #000; color: #fff; border: none; padding: 16px; border-radius: 14px; width: 100%; font-weight: 700; font-size: 16px; margin-top: 10px; cursor: pointer; }
+        .editor-input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; outline: none; }
         .hidden { display: none; }
         
         .dots-btn { font-size: 24px; color: #ccc; padding: 0 10px; cursor: pointer; }
-        .context-menu { position: absolute; right: 10px; top: 50px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100; text-align: left; overflow: hidden; }
-        .menu-item { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
+        .context-menu { position: absolute; right: 20px; background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 100; overflow: hidden; }
+        .menu-item { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid #f9f9f9; cursor: pointer; text-align: left; }
 
-        .color-picker { display: flex; justify-content: center; gap: 10px; margin: 10px 0 20px; }
-        .color-opt { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; box-sizing: border-box; }
+        .color-picker { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+        .color-opt { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
         .color-opt.selected { border-color: #000; }
     </style>
 </head>
@@ -68,7 +71,7 @@
     <div class="tabs">
         <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
         <div id="t-hidden" class="tab" onclick="switchTab('hidden')">
-            <span class="eye-sym">○</span> Скрытые
+            <span class="eye-sym">🙈</span> Скрытые
         </div>
         <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
     </div>
@@ -77,31 +80,27 @@
 </div>
 
 <div id="editorView" class="hidden">
-    <!-- Секция редактора без изменений -->
     <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
         <button onclick="closeEditor()" style="background:none; border:none; font-size:16px;">Отмена</button>
         <button onclick="saveProject()" style="background:none; border:none; font-weight:800; font-size:16px; color:#2481cc;">Готово</button>
     </div>
-    
     <input type="text" id="pTitle" class="editor-input" placeholder="Название проекта">
     <input type="text" id="pDate" class="editor-input" placeholder="Дата съемки">
-    
-    <div style="border: 1px solid #eee; padding: 15px; border-radius: 14px; margin-top: 10px;">
-        <input type="text" id="tagInput" class="editor-input" style="margin-bottom:10px;" placeholder="Текст тега">
-        <div class="color-picker">
-            <div class="color-opt tag-gray" onclick="selectColor('gray', this)"></div>
+    <div style="border: 1px solid #eee; padding: 15px; border-radius: 14px;">
+        <input type="text" id="tagInput" class="editor-input" placeholder="Текст тега">
+        <div class="color-picker" id="picker">
+            <div class="color-opt tag-gray selected" onclick="selectColor('gray', this)"></div>
             <div class="color-opt tag-red" onclick="selectColor('red', this)"></div>
             <div class="color-opt tag-green" onclick="selectColor('green', this)"></div>
             <div class="color-opt tag-blue" onclick="selectColor('blue', this)"></div>
             <div class="color-opt tag-yellow" onclick="selectColor('yellow', this)"></div>
         </div>
-        <button class="btn" style="background:#f5f5f5; color:#000; font-size:13px; padding:10px; margin-top:0;" onclick="addTagToList()">+ Добавить тег</button>
+        <button class="btn" style="background:#f5f5f5; color:#000; font-size:13px; padding:10px;" onclick="addTagToList()">+ Добавить тег</button>
         <div id="tempTags" style="margin-top:12px;"></div>
     </div>
 </div>
 
 <script>
-    // Вся логика JS остается идентичной, включая Supabase и обработку вкладок
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_7o_wxB527BROaf9QKHxcnw_5B7rUUn-';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -118,10 +117,10 @@
         const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('is_pinned', {ascending: false}).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
         list.innerHTML = data.map(p => `
-            <div class="project-card">
+            <div class="project-card" style="position:relative">
                 <div class="project-info" onclick="openProject('${p.id}')">
                     <div class="project-title">${p.is_pinned ? '📌 ' : ''}${p.title}</div>
-                    <div class="project-meta">🗓 <b>${p.date_scout || '-'}</b></div>
+                    <div style="font-size:14px; color:#666">🗓 ${p.date_scout || '-'}</div>
                     <div style="margin-top:8px;">${(p.tags || []).map(t => {
                         const [n, c] = t.split(':');
                         return `<span class="tag-pill tag-${c || 'gray'}">${n}</span>`;
@@ -129,13 +128,13 @@
                 </div>
                 <div class="dots-btn" onclick="toggleMenu(event, '${p.id}')">⋮</div>
                 <div id="menu-${p.id}" class="context-menu hidden">
-                    ${currentTab === 'active' ? `<div class="menu-item" onclick="updateStatus('${p.id}', 'hidden')">🔒 Скрыть</div>` : ''}
-                    ${currentTab === 'hidden' ? `<div class="menu-item" onclick="updateStatus('${p.id}', 'active')">🔓 Показать</div>` : ''}
+                    ${currentTab === 'active' ? `<div class="menu-item" onclick="updateStatus('${p.id}', 'hidden')">🙈 Скрыть</div>` : ''}
+                    ${currentTab === 'hidden' ? `<div class="menu-item" onclick="updateStatus('${p.id}', 'active')">👁 Показать</div>` : ''}
                     <div class="menu-item" onclick="togglePin('${p.id}', ${p.is_pinned})">${p.is_pinned ? '📍 Открепить' : '📍 Закрепить'}</div>
                     <div class="menu-item" style="color:red" onclick="updateStatus('${p.id}', 'trash')">🗑 В корзину</div>
                 </div>
             </div>
-        `).join('') || '<p style="color:#999; margin-top:50px;">Здесь пока ничего нет</p>';
+        `).join('') || '<p style="color:#999; margin-top:50px;">Пусто</p>';
     }
 
     function switchTab(t) {
@@ -180,8 +179,7 @@
 
     function createNewProject() {
         currentId = null; tempTags = [];
-        document.getElementById('pTitle').value = ''; 
-        document.getElementById('pDate').value = '';
+        document.getElementById('pTitle').value = ''; document.getElementById('pDate').value = '';
         renderTempTags();
         document.getElementById('mainView').classList.add('hidden');
         document.getElementById('editorView').classList.remove('hidden');
@@ -212,10 +210,11 @@
 
     function toggleMenu(e, id) {
         e.stopPropagation();
-        if (openMenuId && openMenuId !== id) document.getElementById('menu-'+openMenuId).classList.add('hidden');
         const m = document.getElementById('menu-'+id);
-        m.classList.toggle('hidden');
-        openMenuId = m.classList.contains('hidden') ? null : id;
+        const isHidden = m.classList.contains('hidden');
+        document.querySelectorAll('.context-menu').forEach(cm => cm.classList.add('hidden'));
+        if(isHidden) m.classList.remove('hidden');
+        openMenuId = id;
     }
 
     function closeEditor() {
@@ -224,8 +223,7 @@
         loadProjects();
     }
 
-    window.onclick = () => { if(openMenuId) { document.getElementById('menu-'+openMenuId).classList.add('hidden'); openMenuId = null; } };
-    
+    window.onclick = () => { document.querySelectorAll('.context-menu').forEach(m => m.classList.add('hidden')); };
     loadProjects();
 </script>
 </body>
