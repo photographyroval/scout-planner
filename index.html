@@ -23,14 +23,12 @@
 
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; }
+        .btn-black:active { opacity: 0.8; transform: scale(0.98); }
         
         .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: column; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; }
-        
-        /* Исправленный тег: теперь не на всю ширину */
         .list-tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; display: inline-block; width: fit-content; opacity: 0.9; }
         
         .card-menu-btn { position: absolute; top: 8px; right: 8px; font-size: 20px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #bbb; z-index: 10; }
-        
         .dropdown-menu { position: absolute; top: 40px; right: 10px; background: #fff; border: 1px solid #eee; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 100; display: none; min-width: 160px; overflow: hidden; }
         .dropdown-menu.show { display: block; }
         .menu-item { padding: 14px 18px; font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 1px solid #f9f9f9; }
@@ -51,7 +49,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 01.05.3</div>
+<div class="version-tag">v. 01.05.4 FINAL</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -116,12 +114,11 @@
     let currentEditId = null;
     let locations = [];
 
-    // Сильное вибро при переключении вкладок
     function switchTab(t) {
         currentTab = t;
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById('t-' + t).classList.add('active');
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); 
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         loadProjects();
     }
 
@@ -137,13 +134,10 @@
 
     async function changeStatus(e, id, newStatus) {
         e.stopPropagation();
-        
-        // Подтверждение при удалении
         if (newStatus === 'trash') {
             const confirmed = confirm("Точно отправить проект в корзину?");
             if (!confirmed) return;
         }
-
         const { error } = await client.from('projects').update({ status: newStatus }).eq('id', id);
         if (!error) {
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
@@ -222,6 +216,7 @@
     }
 
     function createNewProject() {
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         currentEditId = null; locations = [];
         document.querySelectorAll('input').forEach(i => i.value = '');
         renderLocations();
