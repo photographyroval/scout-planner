@@ -49,7 +49,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 30.04 FIXED</div>
+<div class="version-tag">v. 30.04 FINAL</div>
 
 <!-- MAIN VIEW -->
 <div id="mainView">
@@ -99,7 +99,7 @@
 <div id="locationView" class="hidden">
     <div class="nav-bar">
         <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="()" style="color: #34c759;">Сохранить и далее</button>
+        <button class="nav-btn" onclick="saveAndGoToPlan()" style="color: #34c759;">Сохранить и далее</button>
     </div>
     <div class="container">
         <h3 style="font-size: 24px; font-weight: 800; width: 100%;">Сбор</h3>
@@ -188,7 +188,7 @@
         list.innerHTML = data?.length ? data.map(p => `
             <div class="project-card" onclick="openEdit('${p.id}')">
                 <div style="flex:1;">
-                    ${p.tag_text ? `<div class="list-tag" style="background:${p.tag_color || '#8e8e93'}">${p.tag_text}</div>` : ''}
+                    ${p.tags ? `<div class="list-tag" style="background:${(p.content?.tag_color) || '#8e8e93'}">${p.tags}</div>` : ''}
                     <div style="font-weight:800; font-size:17px;">${p.title}</div>
                     <div style="font-size:13px; color:#888;">🗓 ${p.date_scout || '...'}</div>
                 </div>
@@ -198,64 +198,61 @@
     }
 
     async function saveAndGoToPlan() {
-    const title = document.getElementById('pTitle').value.trim();
-    if (!title) return alert("Введите название");
+        const title = document.getElementById('pTitle').value.trim();
+        if (!title) return alert("Введите название");
 
-    const additionalData = {
-        meeting_time: document.getElementById('pTime').value,
-        exit_time: document.getElementById('pExitTime').value,
-        location_address: document.getElementById('pAddress').value,
-        coords: document.getElementById('pCoords').value,
-        tag_color: selectedColor, 
-        locations: locations     
-    };
+        const additionalData = {
+            meeting_time: document.getElementById('pTime').value,
+            exit_time: document.getElementById('pExitTime').value,
+            location_address: document.getElementById('pAddress').value,
+            coords: document.getElementById('pCoords').value,
+            tag_color: selectedColor, 
+            locations: locations     
+        };
 
-    const payload = {
-        user_id: uid,
-        title: title,
-        date_scout: document.getElementById('pDate').value,
-        tags: document.getElementById('pTagText').value, // Записываем в tags
-        content: additionalData,                       // Записываем в content
-        status: 'active'
-    };
+        const payload = {
+            user_id: uid,
+            title: title,
+            date_scout: document.getElementById('pDate').value,
+            tags: document.getElementById('pTagText').value,
+            content: additionalData,
+            status: 'active'
+        };
 
-    const { data, error } = await client
-        .from('projects')
-        .upsert({ id: currentEditId || undefined, ...payload })
-        .select();
-    
-    if (error) alert("Ошибка: " + error.message);
-    else { currentEditId = data[0].id; showView('planView'); }
-};
-
-        const { data, error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload }).select();
+        const { data, error } = await client
+            .from('projects')
+            .upsert({ id: currentEditId || undefined, ...payload })
+            .select();
         
-        if (error) {
-            alert("Ошибка сохранения: " + error.message);
-        } else {
-            currentEditId = data[0].id;
-            showView('planView');
+        if (error) alert("Ошибка: " + error.message);
+        else { 
+            currentEditId = data[0].id; 
+            showView('planView'); 
         }
     }
 
     async function finalSaveAll() {
-    const updatedContent = {
-        meeting_time: document.getElementById('pTime').value,
-        exit_time: document.getElementById('pExitTime').value,
-        location_address: document.getElementById('pAddress').value,
-        coords: document.getElementById('pCoords').value,
-        tag_color: selectedColor,
-        locations: locations 
-    };
+        const updatedContent = {
+            meeting_time: document.getElementById('pTime').value,
+            exit_time: document.getElementById('pExitTime').value,
+            location_address: document.getElementById('pAddress').value,
+            coords: document.getElementById('pCoords').value,
+            tag_color: selectedColor,
+            locations: locations 
+        };
 
-    const { error } = await client
-        .from('projects')
-        .update({ content: updatedContent })
-        .eq('id', currentEditId);
-    
-    if (!error) showView('mainView');
-    else alert("Ошибка сохранения: " + error.message);
-}
+        const { error } = await client
+            .from('projects')
+            .update({ content: updatedContent })
+            .eq('id', currentEditId);
+        
+        if (!error) {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            showView('mainView');
+        } else {
+            alert("Ошибка сохранения: " + error.message);
+        }
+    }
 
     function addLocationBlock() {
         locations.push({ id: Date.now(), name: '', time_start: '' });
@@ -278,25 +275,25 @@
     function updateLoc(id, f, v) { const l = locations.find(x => x.id === id); if(l) l[f] = v; }
 
     async function openEdit(id) {
-    const { data } = await client.from('projects').select('*').eq('id', id).single();
-    if (data) {
-        currentEditId = data.id;
-        document.getElementById('pTitle').value = data.title || '';
-        document.getElementById('pDate').value = data.date_scout || '';
-        document.getElementById('pTagText').value = data.tags || ''; // Берем из tags
-        
-        const c = data.content || {}; 
-        setTagColor(c.tag_color || '#ff3b30', null);
-        document.getElementById('pTime').value = c.meeting_time || '';
-        document.getElementById('pExitTime').value = c.exit_time || '';
-        document.getElementById('pAddress').value = c.location_address || '';
-        document.getElementById('pCoords').value = c.coords || '';
-        locations = c.locations || [];
-        
-        renderLocations();
-        showView('editorView');
+        const { data } = await client.from('projects').select('*').eq('id', id).single();
+        if (data) {
+            currentEditId = data.id;
+            document.getElementById('pTitle').value = data.title || '';
+            document.getElementById('pDate').value = data.date_scout || '';
+            document.getElementById('pTagText').value = data.tags || ''; 
+            
+            const c = data.content || {}; 
+            setTagColor(c.tag_color || '#ff3b30', null);
+            document.getElementById('pTime').value = c.meeting_time || '';
+            document.getElementById('pExitTime').value = c.exit_time || '';
+            document.getElementById('pAddress').value = c.location_address || '';
+            document.getElementById('pCoords').value = c.coords || '';
+            locations = c.locations || [];
+            
+            renderLocations();
+            showView('editorView');
+        }
     }
-}
 
     function createNewProject() {
         currentEditId = null; locations = [];
