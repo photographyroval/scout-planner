@@ -15,61 +15,73 @@
             overflow-x: hidden;
         }
         
-        /* Шапка */
+        /* ШАПКА */
         .header-sticky { position: sticky; top: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); z-index: 1000; padding: 20px 25px; border-bottom: 1px solid #f2f2f2; text-align: center; }
-        h2 { margin: 0 0 15px 0; font-size: 20px; font-weight: 800; }
+        h2 { margin: 0 0 15px 0; font-size: 18px; font-weight: 900; letter-spacing: 1px; }
         .tabs { display: flex; justify-content: center; gap: 8px; }
-        .tab { font-size: 13px; font-weight: 700; color: #999; padding: 10px 16px; border-radius: 12px; cursor: pointer; background: #f5f5f5; border: none; transition: all 0.3s ease; }
+        .tab { font-size: 11px; font-weight: 800; color: #999; padding: 10px 16px; border-radius: 12px; cursor: pointer; background: #f5f5f5; border: none; transition: all 0.3s ease; text-transform: uppercase; }
         .tab.active[data-tab="active"] { background: #000 !important; color: #fff; }
         .tab.active[data-tab="hidden"] { background: #8e8e93 !important; color: #fff; }
         .tab.active[data-tab="trash"] { background: #ff3b30 !important; color: #fff; }
 
-        .btn-base { height: 54px; border-radius: 16px; font-size: 16px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .btn-base { height: 54px; border-radius: 16px; font-size: 14px; font-weight: 900; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 1px; }
         .btn-black { background: #000; color: #fff; width: calc(100% - 40px); max-width: 350px; margin: 20px auto; }
         
-        /* Карточки */
+        /* КАРТОЧКИ */
         .project-card { 
             border: 1px solid #eee; border-radius: 20px; padding: 20px; margin-bottom: 12px; background: #fff; 
             width: 100%; max-width: 350px; box-sizing: border-box; position: relative; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 15px; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); display: flex; align-items: center; gap: 15px; cursor: pointer;
         }
-        .project-card.selected { border-color: #000; background: #f9f9f9; transform: scale(0.96); opacity: 0.8; }
+        .project-card.selected { border-color: #000; background: #f9f9f9; transform: scale(0.96); }
         
         .checkbox { 
             width: 20px; height: 20px; border: 2px solid #ddd; border-radius: 6px; 
-            display: none; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s;
+            display: none; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .checkbox.visible { display: flex; animation: fadeIn 0.2s ease; }
         .project-card.selected .checkbox { background: #000; border-color: #000; }
         .project-card.selected .checkbox::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 900; }
 
-        /* Анимированное меню действий */
+        /* МЕНЮ ДЕЙСТВИЙ */
         #actionMenu { 
-            position: fixed; bottom: -120px; left: 0; width: 100%; background: #000; 
-            padding: 25px 20px 40px 20px; box-sizing: border-box; display: flex; justify-content: space-around; 
+            position: fixed; bottom: -130px; left: 0; width: 100%; background: #000; 
+            padding: 25px 20px 45px 20px; box-sizing: border-box; display: flex; justify-content: space-around; 
             align-items: center; z-index: 9999; 
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-            border-radius: 30px 30px 0 0; color: #fff;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            border-radius: 32px 32px 0 0; color: #fff;
+            box-shadow: 0 -15px 40px rgba(0,0,0,0.4);
         }
-        #actionMenu.show { transform: translateY(-120px); }
+        #actionMenu.show { transform: translateY(-130px); }
         
         .action-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: opacity 0.2s; min-width: 60px; }
         .action-item:active { opacity: 0.5; }
-        .action-icon { font-size: 22px; font-weight: 300; line-height: 1; }
-        .action-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; }
+        .action-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.6; }
 
-        /* Модалка */
+        /* ГРАФИЧЕСКИЕ ИКОНКИ (CSS) */
+        .icon-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; position: relative; }
+        
+        /* Иконка глаза с перечеркиванием */
+        .eye-hide { width: 18px; height: 12px; border: 2px solid #fff; border-radius: 80% 10%; position: relative; transform: rotate(45deg); overflow: hidden; }
+        .eye-hide::before { content: ""; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); }
+        .eye-slash { position: absolute; width: 24px; height: 2px; background: #fff; transform: rotate(-45deg); z-index: 2; }
+
+        /* Иконка корзины */
+        .trash-bin { width: 14px; height: 16px; border: 2px solid #fff; border-top: none; border-radius: 0 0 3px 3px; position: relative; margin-top: 4px; }
+        .trash-bin::before { content: ""; position: absolute; top: -3px; left: -2px; width: 18px; height: 2px; background: #fff; }
+        .trash-bin::after { content: ""; position: absolute; top: -6px; left: 3px; width: 8px; height: 3px; border: 2px solid #fff; border-bottom: none; border-radius: 2px 2px 0 0; }
+
+        /* МОДАЛКА */
         .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; overflow-y: auto; padding: 25px; box-sizing: border-box; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 11px; font-weight: 900; color: #999; margin-bottom: 8px; text-transform: uppercase; }
-        .form-group input { width: 100%; padding: 16px; border: 1px solid #f2f2f2; border-radius: 14px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; outline: none; font-weight: 700; transition: border 0.2s; }
+        .form-group label { display: block; font-size: 10px; font-weight: 900; color: #bbb; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group input { width: 100%; padding: 16px; border: 1px solid #f2f2f2; border-radius: 14px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; outline: none; font-weight: 700; }
         .form-group input:focus { border-color: #000; background: #fff; }
         
-        #devPanel { position: fixed; bottom: 5px; right: 10px; opacity: 0.2; font-size: 9px; z-index: 100; font-family: monospace; }
+        #devPanel { position: fixed; bottom: 5px; right: 10px; opacity: 0.2; font-size: 9px; z-index: 100; font-family: monospace; font-weight: 800; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -80,51 +92,60 @@
         <div class="tabs">
             <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">ПЛАНЫ</div>
             <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">АРХИВ</div>
-            <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">УДАЛЕННЫЕ</div>
+            <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">КОРЗИНА</div>
         </div>
     </div>
     <button id="addBtn" class="btn-base btn-black" onclick="openModal()">+ НОВЫЙ ПРОЕКТ</button>
     <div id="projectList" style="padding: 10px 20px; display: flex; flex-direction: column; align-items: center; padding-bottom: 160px;"></div>
 </div>
 
-<!-- Минималистичное меню действий -->
+<!-- МЕНЮ ДЕЙСТВИЙ -->
 <div id="actionMenu">
     <div class="action-item" onclick="cancelSelection()">
-        <div class="action-icon">×</div>
+        <div class="icon-box" style="font-size: 20px; font-weight: 300;">✕</div>
         <div class="action-label">ОТМЕНА</div>
     </div>
+    
     <div id="hideAction" class="action-item" onclick="applyBulkStatus('hidden')">
-        <div class="action-icon">−</div>
+        <div class="icon-box">
+            <div class="eye-hide"></div>
+            <div class="eye-slash"></div>
+        </div>
         <div class="action-label">СКРЫТЬ</div>
     </div>
+
     <div id="restoreAction" class="action-item" onclick="applyBulkStatus('active')" style="display:none;">
-        <div class="action-icon">+</div>
+        <div class="icon-box" style="font-size: 24px;">⟳</div>
         <div class="action-label">ВЕРНУТЬ</div>
     </div>
+
     <div id="trashAction" class="action-item" onclick="applyBulkStatus('trash')">
-        <div class="action-icon">!</div>
+        <div class="icon-box">
+            <div class="trash-bin"></div>
+        </div>
         <div class="action-label">В КОРЗИНУ</div>
     </div>
+
     <div id="deleteAction" class="action-item" onclick="deleteForever()" style="display:none; color:#ff3b30;">
-        <div class="action-icon">×</div>
+        <div class="icon-box" style="font-size: 24px;">⊗</div>
         <div class="action-label">УДАЛИТЬ</div>
     </div>
 </div>
 
 <div id="createModal" class="full-modal">
     <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2 id="modalHeader" style="margin:0; font-size: 24px;">РЕДАКТИРОВАТЬ</h2>
+        <h2 id="modalHeader" style="margin:0;">РЕДАКТИРОВАТЬ</h2>
         <button onclick="closeModal()" style="background:#f5f5f5; border:none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px;">×</button>
     </div>
     <input type="hidden" id="f-id">
-    <div class="form-group"><label>Название</label><input type="text" id="f-title" placeholder="Film Location X"></div>
-    <div class="form-group"><label>Дата (ДД.ММ)</label><input type="text" id="f-date" maxlength="5" inputmode="numeric"></div>
-    <div class="form-group"><label>Адрес / Точка</label><input type="text" id="f-meeting-address" placeholder="ул. Примерная, 1"></div>
-    <div class="form-group"><label>Заметки</label><input type="text" id="f-notes" placeholder="Код от шлагбаума и т.д."></div>
-    <button class="btn-base btn-black" style="width:100%; margin-top: 10px;" onclick="processSave()">СОХРАНИТЬ</button>
+    <div class="form-group"><label>НАЗВАНИЕ</label><input type="text" id="f-title"></div>
+    <div class="form-group"><label>ДАТА (ДД.ММ)</label><input type="text" id="f-date" maxlength="5" inputmode="numeric"></div>
+    <div class="form-group"><label>АДРЕС</label><input type="text" id="f-meeting-address"></div>
+    <div class="form-group"><label>ЗАМЕТКИ</label><input type="text" id="f-notes"></div>
+    <button class="btn-base btn-black" style="width:100%" onclick="processSave()">СОХРАНИТЬ</button>
 </div>
 
-<div id="devPanel">V1.2.0 | <span onclick="location.reload()" style="cursor:pointer">RELOAD</span></div>
+<div id="devPanel">V1.3.0 | <span onclick="location.reload()" style="cursor:pointer">RELOAD</span></div>
 
 <script>
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
@@ -157,8 +178,8 @@
                  oncontextmenu="handleContextMenu(event, '${p.id}')">
                 <div class="checkbox ${isSelectionMode ? 'visible' : ''}"></div>
                 <div class="project-info" style="flex:1">
-                    <div style="font-weight:900; font-size:16px; letter-spacing: -0.5px;">${p.title.toUpperCase()}</div>
-                    <div style="font-size:12px; color:#aaa; margin-top:6px; font-weight:600;">${p.date_scout || '--.--'} • ${p.meeting_point || 'НЕТ АДРЕСА'}</div>
+                    <div style="font-weight:900; font-size:15px; letter-spacing: -0.2px;">${p.title.toUpperCase()}</div>
+                    <div style="font-size:11px; color:#aaa; margin-top:6px; font-weight:700; text-transform: uppercase;">${p.date_scout || '--.--'} • ${p.meeting_point || 'БЕЗ АДРЕСА'}</div>
                 </div>
             </div>
         `).join('');
