@@ -11,11 +11,9 @@
             background: #fff; margin: 0; padding: 0; color: #000; 
             -webkit-tap-highlight-color: transparent; 
             -webkit-touch-callout: none; 
-            -webkit-user-select: none; 
             user-select: none; 
         }
         
-        /* Стили шапки и вкладок */
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 20px 25px; border-bottom: 1px solid #f2f2f2; text-align: center; }
         h2 { margin: 0 0 15px 0; font-size: 20px; font-weight: 800; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin-top: 5px; }
@@ -24,98 +22,82 @@
         .tab.active[data-tab="hidden"] { background: #8e8e93 !important; color: #fff; }
         .tab.active[data-tab="trash"] { background: #ff3b30 !important; color: #fff; }
 
-        /* Кнопки */
         .btn-base { height: 54px; border-radius: 16px; font-size: 16px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .btn-black { background: #000; color: #fff; width: calc(100% - 40px); max-width: 350px; margin: 20px auto; }
-        .btn-continue { background: #34c759; color: #fff; width: 100%; margin-top: 10px; box-shadow: 0 4px 12px rgba(52,199,89,0.2); text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* Модальное окно */
-        .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; overflow-y: auto; padding: 25px; box-sizing: border-box; }
-        .separator { border: 0; border-top: 2px dashed #eee; margin: 15px 0 25px 0; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 900; color: #000; margin-bottom: 8px; text-transform: uppercase; }
-        .form-group input { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; outline: none; color: #000; font-weight: 800; }
         
-        /* Карточки проектов */
         .project-card { 
             border: 1px solid #eee; border-radius: 18px; padding: 20px; margin-bottom: 12px; background: #fff; 
             width: 100%; max-width: 350px; box-sizing: border-box; position: relative; 
-            transition: transform 0.1s; display: flex; align-items: center; gap: 15px;
-            touch-action: pan-y;
+            transition: all 0.2s; display: flex; align-items: center; gap: 15px; cursor: pointer;
         }
-        .project-card:active { transform: scale(0.98); }
+        .project-card.selected { border-color: #34c759; background: #f0fff4; transform: scale(0.98); }
         
-        /* Чекбоксы */
         .checkbox { 
-            width: 24px; height: 24px; border: 2px solid #ddd; border-radius: 8px; 
+            width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; 
             display: none; align-items: center; justify-content: center; flex-shrink: 0;
-            transition: all 0.2s;
         }
         .checkbox.visible { display: flex; }
-        .checkbox.checked { background: #34c759; border-color: #34c759; }
-        .checkbox.checked::after { content: '✓'; color: #fff; font-size: 14px; font-weight: 900; }
+        .project-card.selected .checkbox { background: #34c759; border-color: #34c759; }
+        .project-card.selected .checkbox::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 900; }
 
-        /* Панель выбора */
-        #selectionBar { 
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #000; color: #fff; 
-            padding: 20px; box-sizing: border-box; display: none; justify-content: space-between; align-items: center; 
-            z-index: 9999; border-radius: 24px 24px 0 0;
+        /* Контекстное меню снизу */
+        #actionMenu { 
+            position: fixed; bottom: -100px; left: 0; width: 100%; background: #000; 
+            padding: 20px; box-sizing: border-box; display: flex; justify-content: space-around; 
+            align-items: center; z-index: 9999; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 24px 24px 0 0; color: #fff;
         }
+        #actionMenu.show { bottom: 0; }
+        .action-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font-size: 11px; font-weight: 700; }
+        .action-item span { font-size: 20px; }
 
-        /* Служебная панель */
-        #devPanel { position: fixed; bottom: 10px; right: 10px; display: flex; align-items: center; gap: 8px; z-index: 500; opacity: 0.5; }
+        .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; overflow-y: auto; padding: 25px; box-sizing: border-box; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 900; color: #000; margin-bottom: 8px; text-transform: uppercase; }
+        .form-group input { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; outline: none; font-weight: 800; }
+        
+        #devPanel { position: fixed; bottom: 5px; right: 5px; opacity: 0.3; font-size: 10px; z-index: 100; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- Отключаем системное меню везде -->
 
 <div id="mainView">
     <div class="header-sticky">
-        <h2>Локации</h2>
+        <h2 id="pageTitle">Проекты</h2>
         <div class="tabs">
             <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">Активные</div>
             <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">Скрытые</div>
             <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">Корзина</div>
         </div>
     </div>
-    <button id="addBtn" class="btn-base btn-black" onclick="openModal()">+ Создать план</button>
-    <div id="projectList" style="padding: 10px 20px; display: flex; flex-direction: column; align-items: center; padding-bottom: 140px;"></div>
+    <button id="addBtn" class="btn-base btn-black" onclick="openModal()">+ Создать проект</button>
+    <div id="projectList" style="padding: 10px 20px; display: flex; flex-direction: column; align-items: center; padding-bottom: 150px;"></div>
 </div>
 
-<!-- Панель действий -->
-<div id="selectionBar">
-    <span id="selectedCount" style="font-weight: 800;">Выбрано: 0</span>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="cancelSelection()" style="background: #333; border: none; color: #fff; padding: 10px 15px; border-radius: 12px; font-weight: 700;">✕</button>
-        <button id="bulkActionBtn" onclick="applyBulkAction()" style="background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800;">Действие</button>
-    </div>
+<!-- Выпадающее меню действий -->
+<div id="actionMenu">
+    <div class="action-item" onclick="cancelSelection()"><span>✕</span>Отмена</div>
+    <div id="hideAction" class="action-item" onclick="applyBulkStatus('hidden')"><span>👁‍🗨</span>Скрыть</div>
+    <div id="restoreAction" class="action-item" onclick="applyBulkStatus('active')" style="display:none;"><span>🔄</span>Вернуть</div>
+    <div id="trashAction" class="action-item" onclick="applyBulkStatus('trash')"><span>🗑</span>В корзину</div>
+    <div id="deleteAction" class="action-item" onclick="deleteForever()" style="display:none; color:#ff3b30;"><span>❌</span>Удалить</div>
 </div>
 
-<!-- Модалка (создание/редактирование) -->
+<!-- Модалка редактирования (без изменений структуры) -->
 <div id="createModal" class="full-modal">
     <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-        <h2 id="modalHeader" style="margin:0; font-size: 25px;"><b>Что планируем?</b></h2>
-        <button onclick="closeModal()" style="background:#f5f5f5; border:none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px;">✕</button>
+        <h2 id="modalHeader" style="margin:0;">Редактирование</h2>
+        <button onclick="closeModal()" style="background:#f5f5f5; border:none; width: 36px; height: 36px; border-radius: 50%;">✕</button>
     </div>
     <input type="hidden" id="f-id">
-    <div class="form-group"><label>Название проекта</label><input type="text" id="f-title" placeholder="Название съемки"></div>
-    <div class="form-group"><label>Дата</label><input type="text" id="f-date" placeholder="дд.мм" inputmode="numeric" maxlength="5"></div>
-    <div class="separator"></div>
-    <div class="form-group"><label>Место сбора</label><input type="text" id="f-meeting-address" placeholder="Адрес локации"></div>
-    <div class="form-group"><label>Ссылка на карту</label><input type="url" id="f-meeting-link" placeholder="Google / Yandex"></div>
-    <div style="display:flex; gap:12px;">
-        <div class="form-group" style="flex:1"><label>Сбор</label><input type="text" id="f-time-arrival" placeholder="чч:мм" inputmode="numeric" maxlength="5"></div>
-        <div class="form-group" style="flex:1"><label>Выезд</label><input type="text" id="f-time-departure" placeholder="чч:мм" inputmode="numeric" maxlength="5"></div>
-    </div>
-    <div class="separator"></div>
-    <div class="form-group"><label>Заметки</label><input type="text" id="f-notes" placeholder="Важные детали..."></div>
-    <button id="saveBtn" class="btn-base btn-continue" onclick="processSave()">Продолжить</button>
+    <div class="form-group"><label>Название</label><input type="text" id="f-title"></div>
+    <div class="form-group"><label>Дата</label><input type="text" id="f-date" maxlength="5"></div>
+    <div class="form-group"><label>Место</label><input type="text" id="f-meeting-address"></div>
+    <div class="form-group"><label>Заметки</label><input type="text" id="f-notes"></div>
+    <button class="btn-base btn-black" style="width:100%" onclick="processSave()">Сохранить</button>
 </div>
 
-<!-- Панель разработчика -->
-<div id="devPanel">
-    <span style="font-size: 10px; color: #999; font-family: monospace;">v1.0.8</span>
-    <button onclick="location.reload()" style="background: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; padding: 4px 8px; font-size: 10px; color: #666; cursor: pointer;">Reload</button>
-</div>
+<div id="devPanel">v1.1.0 | <span onclick="location.reload()">Reload</span></div>
 
 <script>
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
@@ -130,17 +112,7 @@
     let isSelectionMode = false;
     let longPressTimer;
 
-    function applyMask(input, separator) {
-        input.addEventListener('input', () => {
-            let value = input.value.replace(/\D/g, '');
-            if (value.length > 2) value = value.slice(0, 2) + separator + value.slice(2, 4);
-            input.value = value;
-        });
-    }
-    applyMask(document.getElementById('f-date'), '.');
-    applyMask(document.getElementById('f-time-arrival'), ':');
-    applyMask(document.getElementById('f-time-departure'), ':');
-
+    // ЗАГРУЗКА
     async function loadProjects() {
         const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
         projects = data || [];
@@ -150,33 +122,27 @@
     function renderProjects() {
         const list = document.getElementById('projectList');
         list.innerHTML = projects.map(p => `
-            <div class="project-card" 
-                 onclick="handleCardClick(event, '${p.id}')" 
-                 ontouchstart="handleTouchStart(event, '${p.id}')" 
-                 ontouchend="handleTouchEnd(event)"
-                 ontouchmove="handleTouchEnd(event)">
-                <div class="checkbox ${isSelectionMode ? 'visible' : ''} ${selectedIds.has(p.id) ? 'checked' : ''}"></div>
+            <div class="project-card ${selectedIds.has(p.id) ? 'selected' : ''}" 
+                 id="card-${p.id}"
+                 onclick="handleCardClick('${p.id}')"
+                 onmousedown="handleMouseDown(event, '${p.id}')"
+                 onmouseup="handleMouseUp()"
+                 onmouseleave="handleMouseUp()"
+                 ontouchstart="handleTouchStart(event, '${p.id}')"
+                 ontouchend="handleTouchEnd()"
+                 oncontextmenu="handleContextMenu(event, '${p.id}')">
+                <div class="checkbox ${isSelectionMode ? 'visible' : ''}"></div>
                 <div class="project-info">
                     <div style="font-weight:800; font-size:17px;">${p.title}</div>
-                    <div style="font-size:13px; color:#777; margin-top:8px;">🗓 ${p.date_scout || '--.--'}</div>
+                    <div style="font-size:13px; color:#777; margin-top:4px;">${p.date_scout || '--.--'}</div>
                 </div>
             </div>
         `).join('');
-        updateSelectionBar();
+        updateActionMenu();
     }
 
-    // LONG PRESS
-    function handleTouchStart(e, id) {
-        if (isSelectionMode) return;
-        longPressTimer = setTimeout(() => {
-            isSelectionMode = true;
-            tg.HapticFeedback.impactOccurred('heavy');
-            toggleSelect(id);
-        }, 600);
-    }
-    function handleTouchEnd() { clearTimeout(longPressTimer); }
-
-    function handleCardClick(e, id) {
+    // ЛОГИКА ВЫБОРА (ПК И ТЕЛЕФОН)
+    function handleCardClick(id) {
         if (isSelectionMode) {
             toggleSelect(id);
         } else {
@@ -185,9 +151,37 @@
         }
     }
 
+    // Для ПК (Правая кнопка мыши)
+    function handleContextMenu(e, id) {
+        e.preventDefault();
+        if (!isSelectionMode) {
+            isSelectionMode = true;
+            toggleSelect(id);
+        }
+    }
+
+    // Для удержания (ПК и Телефон)
+    function handleMouseDown(e, id) { if(e.button === 0) startTimer(id); }
+    function handleMouseUp() { clearTimer(); }
+    function handleTouchStart(e, id) { startTimer(id); }
+    function handleTouchEnd() { clearTimer(); }
+
+    function startTimer(id) {
+        clearTimer();
+        longPressTimer = setTimeout(() => {
+            if (!isSelectionMode) {
+                isSelectionMode = true;
+                tg.HapticFeedback.impactOccurred('heavy');
+                toggleSelect(id);
+            }
+        }, 600);
+    }
+    function clearTimer() { clearTimeout(longPressTimer); }
+
     function toggleSelect(id) {
         if (selectedIds.has(id)) selectedIds.delete(id);
-        else { selectedIds.add(id); tg.HapticFeedback.impactOccurred('light'); }
+        else selectedIds.add(id);
+        
         if (selectedIds.size === 0) isSelectionMode = false;
         renderProjects();
     }
@@ -198,69 +192,63 @@
         renderProjects();
     }
 
-    function updateSelectionBar() {
-        const bar = document.getElementById('selectionBar');
-        const btn = document.getElementById('bulkActionBtn');
+    // МЕНЮ ДЕЙСТВИЙ
+    function updateActionMenu() {
+        const menu = document.getElementById('actionMenu');
         if (isSelectionMode && selectedIds.size > 0) {
-            bar.style.display = 'flex';
-            document.getElementById('selectedCount').innerText = `Выбрано: ${selectedIds.size}`;
-            btn.innerText = (currentTab === 'active') ? 'В корзину' : (currentTab === 'trash' ? 'Удалить' : 'Вернуть');
-        } else { bar.style.display = 'none'; }
+            menu.classList.add('show');
+            
+            // Настройка кнопок в зависимости от вкладки
+            document.getElementById('hideAction').style.display = (currentTab === 'active') ? 'flex' : 'none';
+            document.getElementById('restoreAction').style.display = (currentTab !== 'active') ? 'flex' : 'none';
+            document.getElementById('trashAction').style.display = (currentTab !== 'trash') ? 'flex' : 'none';
+            document.getElementById('deleteAction').style.display = (currentTab === 'trash') ? 'flex' : 'none';
+        } else {
+            menu.classList.remove('show');
+        }
     }
 
-    // РЕДАКТИРОВАНИЕ И СОХРАНЕНИЕ
-    function openModal(project = null) {
-        if (project) {
-            document.getElementById('modalHeader').innerText = "Редактирование";
-            document.getElementById('saveBtn').innerText = "Сохранить";
-            document.getElementById('f-id').value = project.id;
-            document.getElementById('f-title').value = project.title || '';
-            document.getElementById('f-date').value = project.date_scout || '';
-            document.getElementById('f-meeting-address').value = project.meeting_point || '';
-            document.getElementById('f-meeting-link').value = project.meeting_link || '';
-            document.getElementById('f-time-arrival').value = project.time_arrival || '';
-            document.getElementById('f-time-departure').value = project.time_departure || '';
-            document.getElementById('f-notes').value = project.notes || '';
-        } else {
-            document.getElementById('modalHeader').innerText = "Что планируем?";
-            document.getElementById('saveBtn').innerText = "Продолжить";
-            document.getElementById('f-id').value = '';
-            ['f-title', 'f-date', 'f-meeting-address', 'f-meeting-link', 'f-time-arrival', 'f-time-departure', 'f-notes'].forEach(id => document.getElementById(id).value = '');
-        }
+    async function applyBulkStatus(newStatus) {
+        const ids = Array.from(selectedIds);
+        await client.from('projects').update({ status: newStatus }).in('id', ids);
+        tg.HapticFeedback.notificationOccurred('success');
+        finishBulk();
+    }
+
+    async function deleteForever() {
+        tg.showConfirm("Удалить безвозвратно?", async (ok) => {
+            if (ok) {
+                await client.from('projects').delete().in('id', Array.from(selectedIds));
+                finishBulk();
+            }
+        });
+    }
+
+    function finishBulk() {
+        cancelSelection();
+        loadProjects();
+    }
+
+    // МОДАЛКА И ВКЛАДКИ
+    function openModal(p) {
+        document.getElementById('f-id').value = p.id;
+        document.getElementById('f-title').value = p.title;
+        document.getElementById('f-date').value = p.date_scout;
+        document.getElementById('f-meeting-address').value = p.meeting_point;
+        document.getElementById('f-notes').value = p.notes;
         document.getElementById('createModal').style.display = 'flex';
     }
-
     function closeModal() { document.getElementById('createModal').style.display = 'none'; }
 
     async function processSave() {
-        const id = document.getElementById('f-id').value;
         const data = {
-            user_id: uid,
             title: document.getElementById('f-title').value,
             date_scout: document.getElementById('f-date').value,
             meeting_point: document.getElementById('f-meeting-address').value,
-            meeting_link: document.getElementById('f-meeting-link').value,
-            time_arrival: document.getElementById('f-time-arrival').value,
-            time_departure: document.getElementById('f-time-departure').value,
-            notes: document.getElementById('f-notes').value,
-            status: 'active'
+            notes: document.getElementById('f-notes').value
         };
-        if (!data.title) return tg.showAlert("Введите название!");
-        const res = id ? await client.from('projects').update(data).eq('id', id) : await client.from('projects').insert([data]);
-        if (!res.error) {
-            tg.HapticFeedback.notificationOccurred('success');
-            closeModal();
-            loadProjects();
-        }
-    }
-
-    async function applyBulkAction() {
-        const ids = Array.from(selectedIds);
-        if (currentTab === 'active') await client.from('projects').update({ status: 'trash' }).in('id', ids);
-        else if (currentTab === 'trash') await client.from('projects').delete().in('id', ids);
-        else await client.from('projects').update({ status: 'active' }).in('id', ids);
-        tg.HapticFeedback.notificationOccurred('success');
-        cancelSelection();
+        await client.from('projects').update(data).eq('id', document.getElementById('f-id').value);
+        closeModal();
         loadProjects();
     }
 
@@ -269,11 +257,11 @@
         cancelSelection();
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById(`t-${t}`).classList.add('active');
-        document.getElementById('addBtn').style.display = (t === 'active') ? 'flex' : 'none';
         loadProjects();
     }
 
     loadProjects();
+    tg.expand();
 </script>
 </body>
 </html>
