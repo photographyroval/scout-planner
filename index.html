@@ -6,49 +6,54 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ФИКСИРОВАННЫЙ ДИЗАЙН: НЕ ИЗМЕНЯТЬ БЕЗ РАЗРЕШЕНИЯ */
+        /* ФИКСИРОВАННЫЙ ДИЗАЙН (С ОБНОВЛЕНИЯМИ) */
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; user-select: none; }
         
-        .header-sticky { 
-            position: sticky; 
-            top: 0; 
-            background: #fff; 
-            z-index: 1000; 
-            padding: 20px 25px; 
-            border-bottom: 1px solid #f2f2f2; 
-            text-align: center; 
-        }
-        
+        .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 20px 25px; border-bottom: 1px solid #f2f2f2; text-align: center; }
         h2 { margin: 0 0 15px 0; font-size: 20px; font-weight: 800; }
 
         .tabs { display: flex; justify-content: center; gap: 10px; margin-top: 5px; }
-        .tab { 
-            font-size: 13px; 
-            font-weight: 700; 
-            color: #999; 
-            padding: 10px 18px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            background: #f5f5f5; 
-            border: none; 
-            transition: all 0.2s ease;
-        }
+        .tab { font-size: 13px; font-weight: 700; color: #999; padding: 10px 18px; border-radius: 12px; cursor: pointer; background: #f5f5f5; border: none; }
         .tab.active[data-tab="active"] { background: #34c759; color: #fff; }
-        .tab.active[data-tab="hidden"] { background: #8e8e93; color: #fff; }
-        .tab.active[data-tab="trash"] { background: #ff3b30; color: #fff; }
-
-        .btn-base { height: 54px; border-radius: 16px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-black { background: #000; color: #fff; width: calc(100% - 40px); max-width: 350px; margin: 20px auto; }
-        .btn-black:active { transform: scale(0.98); opacity: 0.9; }
         
-        /* ОКНО СОЗДАНИЯ: ОБНОВЛЕННЫЕ ПОЛЯ */
+        /* Кнопка "Создать план" (Главная) */
+        .btn-base { height: 54px; border-radius: 16px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .btn-black { background: #000; color: #fff; width: calc(100% - 40px); max-width: 350px; margin: 20px auto; }
+        
+        /* Кнопка "Сохранить план" (Органичная и заметная) */
+        .btn-save { 
+            background: linear-gradient(180deg, #222 0%, #000 100%); 
+            color: #fff; 
+            width: 100%; 
+            margin-top: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            letter-spacing: 0.3px;
+        }
+        .btn-save:active { transform: scale(0.97); }
+
+        /* ОКНО СОЗДАНИЯ */
         .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; overflow-y: auto; padding: 25px; box-sizing: border-box; }
+        
+        /* Пунктирный разделитель */
+        .separator { border: 0; border-top: 2px dashed #eee; margin: 15px 0 25px 0; width: 100%; }
+
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-size: 11px; font-weight: 800; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-group input { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; outline: none; }
         
+        /* Поля ввода: Дата и Время (Жирные, черные) */
+        .form-group input { 
+            width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; 
+            font-size: 16px; background: #f9f9f9; outline: none; color: #000; font-weight: 700; 
+        }
+        
+        /* Специфические настройки для даты и времени */
+        input[type="date"], input[type="time"] {
+            font-family: inherit;
+            color: #000;
+            font-weight: 800;
+        }
+
         .project-card { border: 1px solid #eee; border-radius: 18px; padding: 20px; margin-bottom: 12px; background: #fff; width: 100%; max-width: 350px; box-sizing: border-box; }
-        hr { border: 0; border-top: 1px solid #f2f2f2; margin: 10px 0 25px 0; }
     </style>
 </head>
 <body>
@@ -57,9 +62,9 @@
     <div class="header-sticky">
         <h2>Локации</h2>
         <div class="tabs">
-            <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">Активные</div>
-            <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">Скрытые</div>
-            <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')" oncontextmenu="handleTrashContext(event)">Корзина</div>
+            <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
+            <div id="t-hidden" class="tab" onclick="switchTab('hidden')">Скрытые</div>
+            <div id="t-trash" class="tab" onclick="switchTab('trash')" oncontextmenu="handleTrashContext(event)">Корзина</div>
         </div>
     </div>
     
@@ -67,13 +72,13 @@
     <div id="projectList" style="padding: 10px 20px; display: flex; flex-direction: column; align-items: center;"></div>
 </div>
 
-<!-- ОБНОВЛЕННОЕ ОКНО СОЗДАНИЯ -->
 <div id="createModal" class="full-modal">
     <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-        <h2 style="margin:0; font-size: 24px;"><b>Что планируем</b></h2>
+        <h2 style="margin:0; font-size: 25px;"><b>Что планируем?</b></h2>
         <button onclick="closeCreateModal()" style="background:#f5f5f5; border:none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
     </div>
 
+    <!-- БЛОК 1: ОСНОВНОЕ -->
     <div class="form-group">
         <label>Название проекта</label>
         <input type="text" id="f-title" placeholder="Название съемки">
@@ -81,11 +86,12 @@
 
     <div class="form-group">
         <label>Дата</label>
-        <input type="date" id="f-date">
+        <input type="date" id="f-date" onfocus="haptic()">
     </div>
 
-    <hr>
+    <div class="separator"></div>
 
+    <!-- БЛОК 2: ЛОГИСТИКА -->
     <div class="form-group">
         <label>Место сбора (Адрес)</label>
         <input type="text" id="f-meeting-address" placeholder="Например: Кутузовский пр-т, 1">
@@ -99,20 +105,23 @@
     <div style="display:flex; gap:12px;">
         <div class="form-group" style="flex:1">
             <label>Время сбора</label>
-            <input type="time" id="f-time-arrival">
+            <input type="time" id="f-time-arrival" onfocus="haptic()">
         </div>
         <div class="form-group" style="flex:1">
             <label>Время выезда</label>
-            <input type="time" id="f-time-departure">
+            <input type="time" id="f-time-departure" onfocus="haptic()">
         </div>
     </div>
 
+    <div class="separator"></div>
+
+    <!-- БЛОК 3: ЗАМЕТКИ -->
     <div class="form-group">
         <label>Заметки для группы</label>
         <input type="text" id="f-notes" placeholder="Одевайтесь теплее, сменная обувь...">
     </div>
 
-    <button class="btn-base btn-black" style="width:100%; margin-top: 10px;" onclick="saveNewPlan()">Сохранить план</button>
+    <button class="btn-base btn-save" onclick="saveNewPlan()">Сохранить план</button>
 </div>
 
 <script>
@@ -122,15 +131,17 @@
     const tg = window.Telegram.WebApp;
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
-    let currentTab = 'active';
+    function haptic() {
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
 
     function openCreateModal() { 
         document.getElementById('createModal').style.display = 'flex'; 
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        haptic();
     }
+    
     function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
 
-    // ОБНОВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ
     async function saveNewPlan() {
         const title = document.getElementById('f-title').value;
         if (!title) return tg.showAlert("Введите название!");
@@ -152,11 +163,9 @@
         if (!error) {
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             // Сброс полей
-            document.getElementById('f-title').value = '';
-            document.getElementById('f-meeting-address').value = '';
-            document.getElementById('f-meeting-link').value = '';
-            document.getElementById('f-notes').value = '';
-            
+            ['f-title', 'f-date', 'f-meeting-address', 'f-meeting-link', 'f-time-arrival', 'f-time-departure', 'f-notes'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
             closeCreateModal();
             loadProjects();
         } else {
@@ -165,7 +174,7 @@
     }
 
     async function loadProjects() {
-        const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
+        const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', 'active').order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
         list.innerHTML = (data || []).map(p => `
             <div class="project-card">
@@ -173,29 +182,6 @@
                 <div style="font-size:13px; color:#777; margin-top:8px;">🗓 ${p.date_scout || 'Дата не указана'}</div>
             </div>
         `).join('');
-    }
-
-    function switchTab(t) {
-        currentTab = t;
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.getElementById(`t-${t}`).classList.add('active');
-        document.getElementById('addBtn').style.display = (t === 'active') ? 'flex' : 'none';
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('soft');
-        loadProjects();
-    }
-
-    function handleTrashContext(e) {
-        e.preventDefault();
-        tg.showActionSheet({
-            title: 'Управление корзиной',
-            buttons: [{ text: 'Очистить всю корзину', type: 'destructive' }]
-        }, async (index) => {
-            if (index === 0) {
-                await client.from('projects').delete().eq('user_id', uid).eq('status', 'trash');
-                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                loadProjects();
-            }
-        });
     }
 
     loadProjects();
