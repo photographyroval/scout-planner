@@ -17,9 +17,10 @@
         .tab.active { background: #000; color: #fff; }
 
         .selection-actions { display: none; gap: 8px; width: 100%; max-width: 350px; margin: 0 auto; }
-        .sel-btn { flex: 1; padding: 15px; border-radius: 14px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
-        .btn-cancel { background: #f2f2f2; }
-        .btn-action-main { background: #000; color: #fff; }
+        .sel-btn { padding: 15px; border-radius: 14px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-cancel { background: #f2f2f2; flex: 1; }
+        .btn-action-main { background: #000; color: #fff; flex: 2; }
+        .btn-action-delete { background: #ffebeb; color: #ff3b30; flex: 1; font-size: 18px; }
 
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; cursor: pointer; }
@@ -27,17 +28,15 @@
         .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; background: #fff; transition: all 0.2s ease; position: relative; cursor: pointer; }
         .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; transform: scale(0.98); }
         
-        /* Чекбокс */
         .card-checkbox { width: 22px; height: 22px; margin-right: 15px; pointer-events: none; display: none; accent-color: #007aff; }
         .selection-mode .card-checkbox { display: block; }
         
         .card-content { flex: 1; pointer-events: none; }
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="version-tag">v. 01.15 CHECKBOX-FIX</div>
+<div class="version-tag">v. 01.16 BULK-DELETE</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -51,6 +50,7 @@
         <div id="selectionActions" class="selection-actions">
             <button class="sel-btn btn-cancel" onclick="exitSelectionMode()">Отмена</button>
             <button id="mainActionBtn" class="sel-btn btn-action-main" onclick="applyBulkAction()">Действие</button>
+            <button id="deleteActionBtn" class="sel-btn btn-action-delete" onclick="applyBulkAction('trash')">🗑</button>
         </div>
 
         <button id="addBtn" class="btn-black" onclick="createNewProject()">+ Создать план</button>
@@ -68,7 +68,6 @@
     let currentTab = 'active', isSelectionMode = false, selectedIds = new Set();
     let pressTimer, isLongPressOccurred = false;
 
-    // ОБРАБОТКА НАЖАТИЙ
     function startPress(e, id) {
         isLongPressOccurred = false;
         clearTimeout(pressTimer);
@@ -82,56 +81,30 @@
         }, 600);
     }
 
-    function endPress() {
-        clearTimeout(pressTimer);
-    }
+    function endPress() { clearTimeout(pressTimer); }
 
     function handleCardClick(e, id) {
-        if (isLongPressOccurred) {
-            isLongPressOccurred = false;
-            return;
-        }
-        if (isSelectionMode || currentTab === 'trash') {
-            toggleId(id);
-        } else {
-            // Здесь будет открытие редактора
-            console.log("Редактировать:", id);
-        }
+        if (isLongPressOccurred) { isLongPressOccurred = false; return; }
+        if (isSelectionMode || currentTab === 'trash') toggleId(id);
+        else console.log("Edit:", id);
     }
 
     function toggleId(id) {
-        if (selectedIds.has(id)) {
-            selectedIds.delete(id);
-        } else {
-            selectedIds.add(id);
-        }
-        
+        if (selectedIds.has(id)) selectedIds.delete(id);
+        else selectedIds.add(id);
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        
-        if (selectedIds.size === 0 && currentTab !== 'trash') {
-            isSelectionMode = false;
-        }
-        
+        if (selectedIds.size === 0 && currentTab !== 'trash') isSelectionMode = false;
         updateSelectionUI();
         renderSelectionState(); 
     }
 
     function renderSelectionState() {
-        // Проходим по всем карточкам и синхронизируем визуальное состояние
         document.querySelectorAll('.project-card').forEach(card => {
             const id = card.getAttribute('data-id');
             const checkbox = card.querySelector('.card-checkbox');
             const isSelected = selectedIds.has(id);
-            
-            if (isSelected) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
-            }
-            
-            if (checkbox) {
-                checkbox.checked = isSelected; // Принудительно ставим галочку
-            }
+            card.classList.toggle('selected', isSelected);
+            if (checkbox) checkbox.checked = isSelected;
         });
     }
 
@@ -140,6 +113,7 @@
         const addBtn = document.getElementById('addBtn');
         const list = document.getElementById('projectList');
         const mainBtn = document.getElementById('mainActionBtn');
+        const delBtn = document.getElementById('deleteActionBtn');
 
         if (isSelectionMode || currentTab === 'trash') {
             list.classList.add('selection-mode');
@@ -147,9 +121,18 @@
             addBtn.style.display = 'none';
             
             let count = selectedIds.size;
-            if (currentTab === 'active') mainBtn.innerText = `Скрыть (${count})`;
-            else if (currentTab === 'hidden') mainBtn.innerText = `В актив (${count})`;
-            else mainBtn.innerText = `Восстановить (${count})`;
+            if (currentTab === 'active') {
+                mainBtn.innerText = `Скрыть (${count})`;
+                delBtn.style.display = 'block';
+            } else if (currentTab === 'hidden') {
+                mainBtn.innerText = `В актив (${count})`;
+                delBtn.style.display = 'block';
+            } else {
+                mainBtn.innerText = `Восстановить (${count})`;
+                delBtn.innerText = "Удалить навсегда"; // В корзине кнопка меняет смысл
+                delBtn.style.flex = "2";
+                mainBtn.style.flex = "1";
+            }
         } else {
             list.classList.remove('selection-mode');
             actions.style.display = 'none';
@@ -165,15 +148,9 @@
     }
 
     async function loadProjects() {
-        const { data, error } = await client.from('projects')
-            .select('*')
-            .eq('user_id', uid)
-            .eq('status', currentTab)
-            .order('created_at', {ascending: false});
-        
+        const { data, error } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
         if (error || !data) return;
-
         list.innerHTML = data.map(p => `
             <div class="project-card ${selectedIds.has(p.id) ? 'selected' : ''}" 
                  data-id="${p.id}"
@@ -184,16 +161,13 @@
                  ontouchend="endPress()"
                  onclick="handleCardClick(event, '${p.id}')"
                  oncontextmenu="event.preventDefault(); return false;">
-                
                 <input type="checkbox" class="card-checkbox" ${selectedIds.has(p.id) ? 'checked' : ''}>
-                
                 <div class="card-content">
                     <div style="font-weight:800; font-size:17px; margin-bottom:4px;">${p.title}</div>
                     <div style="font-size:12px; color:#666;">🗓 ${p.date_scout || 'Нет даты'}</div>
                 </div>
             </div>
         `).join('');
-        
         updateSelectionUI();
         renderSelectionState();
     }
@@ -206,16 +180,29 @@
         loadProjects();
     }
 
-    async function applyBulkAction() {
+    async function applyBulkAction(type) {
         if (selectedIds.size === 0) return;
-        let newStatus = currentTab === 'active' ? 'hidden' : 'active';
-        const { error } = await client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds));
-        if (!error) { exitSelectionMode(); loadProjects(); }
-    }
+        
+        let newStatus;
+        if (type === 'trash') {
+            newStatus = 'trash';
+        } else {
+            newStatus = currentTab === 'active' ? 'hidden' : 'active';
+        }
 
-    function createNewProject() {
-        // Здесь логика открытия пустого редактора
-        console.log("Создать новый проект");
+        // Если мы уже в корзине и жмем "Удалить навсегда"
+        if (currentTab === 'trash' && type === 'trash') {
+            const { error } = await client.from('projects').delete().in('id', Array.from(selectedIds));
+            if (!error) { exitSelectionMode(); loadProjects(); }
+            return;
+        }
+
+        const { error } = await client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds));
+        if (!error) {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            exitSelectionMode();
+            loadProjects();
+        }
     }
 
     loadProjects();
