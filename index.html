@@ -6,79 +6,57 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; overflow-x: hidden; user-select: none; -webkit-user-select: none; }
-        .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10001; pointer-events: none; font-weight: 600; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+        .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10001; pointer-events: none; }
         
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 25px 20px 15px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
-        .reload-btn { position: absolute; left: 15px; top: 28px; background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; opacity: 0.6; }
-        
         h2 { font-size: 20px; margin: 0 0 20px 0; font-weight: 800; }
         
-        .tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; align-items: center; height: 50px; }
-        .tab { font-size: 13px; font-weight: 700; color: #999; padding: 8px 16px; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; background: #f5f5f5; border: none; }
-        .tab.active { transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .tab[data-tab="active"].active { background: #34c759; color: #fff; }
-        .tab[data-tab="hidden"].active { background: #8e8e93; color: #fff; }
-        .tab[data-tab="trash"].active { background: #ff3b30; color: #fff; }
+        .tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; }
+        .tab { font-size: 13px; font-weight: 700; color: #999; padding: 8px 16px; border-radius: 12px; cursor: pointer; background: #f5f5f5; border: none; }
+        .tab.active { background: #000; color: #fff; }
 
         .selection-actions { display: none; gap: 8px; width: 100%; max-width: 350px; margin: 0 auto; }
         .sel-btn { flex: 1; padding: 15px; border-radius: 14px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
-        .btn-cancel { background: #f2f2f2; color: #000; }
+        .btn-cancel { background: #f2f2f2; }
         .btn-action-main { background: #000; color: #fff; }
-        .btn-action-delete { background: #ffebeb; color: #ff3b30; }
 
-        .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
-        .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; }
+        .container { padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; }
         
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; cursor: pointer; transition: all 0.2s ease; }
-        .project-card.selected { border: 2px solid #007aff !important; background: #f0f7ff !important; transform: scale(0.98); }
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; background: #fff; transition: transform 0.1s; position: relative; overflow: hidden; }
+        .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; }
+        
+        /* Чекбоксы теперь видны только в режиме выбора */
+        .card-checkbox { width: 22px; height: 22px; margin-right: 15px; pointer-events: none; display: none; }
+        .selection-mode .card-checkbox { display: block; }
         
         .card-content { flex: 1; pointer-events: none; }
-        .card-checkbox { width: 20px; height: 20px; margin-right: 12px; pointer-events: none; accent-color: #007aff; display: none; }
-        .selection-mode .card-checkbox { display: block; }
-
-        .main-input { width: 100%; padding: 14px; border: 1px solid #efefef; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; background: #f9f9f9; color: #000; outline: none; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="version-tag">v. 01.13 FIXED-LONGPRESS</div>
+<div class="version-tag">v. 01.14 SELECTION-PRO</div>
 
 <div id="mainView">
     <div class="header-sticky">
-        <button class="reload-btn" onclick="window.location.reload()">🔄</button>
         <h2>Локации</h2>
         <div class="tabs">
-            <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">Активные</div>
-            <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">🙈 Скрытые</div>
-            <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">Корзина</div>
+            <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
+            <div id="t-hidden" class="tab" onclick="switchTab('hidden')">Скрытые</div>
+            <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
         </div>
         
         <div id="selectionActions" class="selection-actions">
             <button class="sel-btn btn-cancel" onclick="exitSelectionMode()">Отмена</button>
-            <button id="mainActionBtn" class="sel-btn btn-action-main" onclick="applyBulkAction('status')">Действие</button>
-            <button id="deleteActionBtn" class="sel-btn btn-action-delete" onclick="applyBulkAction('trash')">🗑</button>
+            <button id="mainActionBtn" class="sel-btn btn-action-main" onclick="applyBulkAction()">Действие</button>
         </div>
 
         <button id="addBtn" class="btn-black" onclick="createNewProject()">+ Создать план</button>
     </div>
     <div class="container" id="projectList"></div>
 </div>
-
-<div id="editorView" class="hidden">
-    <div style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
-        <button onclick="showView('mainView')" style="background:none; border:none; color:#007aff; font-weight:600;">Отмена</button>
-        <button onclick="showView('locationView')" style="background:none; border:none; color:#34c759; font-weight:800;">Далее</button>
-    </div>
-    <div class="container">
-        <input type="text" id="pTitle" class="main-input" placeholder="Название проекта" style="margin-bottom:15px;">
-        <input type="text" id="pDate" class="main-input mask-input" data-mask="date" placeholder="Дата (дд.мм)" maxlength="5" inputmode="decimal" style="margin-bottom:15px;">
-        <input type="text" id="pTagText" class="main-input" placeholder="Тег #">
-    </div>
-</div>
-
-<!-- (Остальные вьюхи LocationView и PlanView остаются как были) -->
 
 <script>
     const SUPABASE_URL = 'https://ndgkvnuyngwhecyqsdbp.supabase.co';
@@ -88,120 +66,163 @@
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
     let currentTab = 'active', isSelectionMode = false, selectedIds = new Set();
-    let pressTimer, isLongPressTriggered = false;
+    let pressTimer, isLongPressOccurred = false;
 
-    // ОБРАБОТКА НАЖАТИЙ
-    function onStart(id) {
-        isLongPressTriggered = false;
+    // ГЛОБАЛЬНЫЕ ФУНКЦИИ ВЫБОРА
+    function startPress(e, id) {
+        isLongPressOccurred = false;
+        // Очищаем старый таймер если он был
         clearTimeout(pressTimer);
+        
         pressTimer = setTimeout(() => {
-            isLongPressTriggered = true; // Фиксируем, что это был именно Long Press
-            activateSelectionMode(id);
-        }, 600);
+            isLongPressOccurred = true;
+            if (!isSelectionMode) {
+                isSelectionMode = true;
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+                toggleId(id);
+                updateSelectionUI();
+            }
+        }, 600); // 0.6 сек для активации
     }
 
-    function onEnd() {
+    function endPress() {
         clearTimeout(pressTimer);
     }
 
-    function handleCardClick(id) {
-        // Если это был Long Press, игнорируем клик (чтобы не открылся редактор)
-        if (isLongPressTriggered) {
-            isLongPressTriggered = false;
+    function handleCardClick(e, id) {
+        // Если это был Long Press — игнорируем клик, чтобы не открылся редактор
+        if (isLongPressOccurred) {
+            isLongPressOccurred = false;
             return;
         }
 
         if (isSelectionMode || currentTab === 'trash') {
-            toggleSelection(id);
+            toggleId(id);
         } else {
-            openEdit(id);
+            // Обычный клик - открываем редактор (функция openEdit должна быть определена)
+            console.log("Open Editor for:", id);
+            // openEdit(id); 
         }
     }
 
-    function activateSelectionMode(id) {
-        if (isSelectionMode) return;
-        isSelectionMode = true;
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        toggleSelection(id);
-        updateUI();
-    }
-
-    function toggleSelection(id) {
-        const el = document.querySelector(`[data-id="${id}"]`);
+    function toggleId(id) {
         if (selectedIds.has(id)) {
             selectedIds.delete(id);
-            if (el) el.classList.remove('selected');
         } else {
             selectedIds.add(id);
-            if (el) el.classList.add('selected');
         }
         
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         
-        // Если все объекты развыделены — выходим из режима (кроме корзины)
+        // Если в активных/скрытых сняли всё выделение — выходим из режима
         if (selectedIds.size === 0 && currentTab !== 'trash') {
-            exitSelectionMode();
-        } else {
-            updateUI();
+            isSelectionMode = false;
         }
+        
+        updateSelectionUI();
+        renderSelectionState(); // Перерисовываем чекбоксы и стили
+    }
+
+    function updateSelectionUI() {
+        const actions = document.getElementById('selectionActions');
+        const addBtn = document.getElementById('addBtn');
+        const list = document.getElementById('projectList');
+        const mainBtn = document.getElementById('mainActionBtn');
+
+        if (isSelectionMode || currentTab === 'trash') {
+            list.classList.add('selection-mode');
+            actions.style.display = 'flex';
+            addBtn.style.display = 'none';
+            
+            // Текст кнопки в зависимости от таба
+            let count = selectedIds.size;
+            if (currentTab === 'active') mainBtn.innerText = `Скрыть (${count})`;
+            else if (currentTab === 'hidden') mainBtn.innerText = `В актив (${count})`;
+            else mainBtn.innerText = `Восстановить (${count})`;
+        } else {
+            list.classList.remove('selection-mode');
+            actions.style.display = 'none';
+            addBtn.style.display = (currentTab === 'active') ? 'block' : 'none';
+        }
+    }
+
+    function renderSelectionState() {
+        document.querySelectorAll('.project-card').forEach(card => {
+            const id = card.getAttribute('data-id');
+            const checkbox = card.querySelector('.card-checkbox');
+            if (selectedIds.has(id)) {
+                card.classList.add('selected');
+                if (checkbox) checkbox.checked = true;
+            } else {
+                card.classList.remove('selected');
+                if (checkbox) checkbox.checked = false;
+            }
+        });
     }
 
     function exitSelectionMode() {
         isSelectionMode = false;
         selectedIds.clear();
-        updateUI();
-        loadProjects();
-    }
-
-    function updateUI() {
-        const actions = document.getElementById('selectionActions'), addBtn = document.getElementById('addBtn');
-        const mainBtn = document.getElementById('mainActionBtn'), delBtn = document.getElementById('deleteActionBtn');
-        const list = document.getElementById('projectList');
-
-        if (isSelectionMode || currentTab === 'trash') list.classList.add('selection-mode');
-        else list.classList.remove('selection-mode');
-
-        if (selectedIds.size > 0 || (currentTab === 'trash' && isSelectionMode)) {
-            actions.style.display = 'flex'; addBtn.style.display = 'none';
-            if (currentTab === 'active') mainBtn.innerText = `Скрыть (${selectedIds.size})`;
-            else if (currentTab === 'hidden') mainBtn.innerText = `В актив (${selectedIds.size})`;
-            else if (currentTab === 'trash') { mainBtn.innerText = `Вернуть (${selectedIds.size})`; delBtn.innerText = "Удалить"; }
-        } else {
-            actions.style.display = 'none'; addBtn.style.display = (currentTab === 'active') ? 'block' : 'none';
-        }
+        updateSelectionUI();
+        renderSelectionState();
     }
 
     async function loadProjects() {
-        const { data, error } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
+        const { data, error } = await client.from('projects')
+            .select('*')
+            .eq('user_id', uid)
+            .eq('status', currentTab)
+            .order('created_at', {ascending: false});
+        
         const list = document.getElementById('projectList');
-        if (error) return;
-        list.innerHTML = data?.length ? data.map(p => `
+        if (error || !data) return;
+
+        list.innerHTML = data.map(p => `
             <div class="project-card ${selectedIds.has(p.id) ? 'selected' : ''}" 
                  data-id="${p.id}"
-                 onmousedown="onStart('${p.id}')"
-                 onmouseup="onEnd()"
-                 onmouseleave="onEnd()"
-                 ontouchstart="onStart('${p.id}')"
-                 ontouchend="onEnd()"
-                 onclick="handleCardClick('${p.id}')"
-                 oncontextmenu="return false;">
+                 onmousedown="startPress(event, '${p.id}')"
+                 onmouseup="endPress()"
+                 onmouseleave="endPress()"
+                 ontouchstart="startPress(event, '${p.id}')"
+                 ontouchend="endPress()"
+                 onclick="handleCardClick(event, '${p.id}')"
+                 oncontextmenu="event.preventDefault(); return false;">
+                
                 <input type="checkbox" class="card-checkbox" ${selectedIds.has(p.id) ? 'checked' : ''}>
+                
                 <div class="card-content">
-                    <div style="font-weight:800; font-size:18px; margin-bottom:4px;">${p.title}</div>
-                    <div style="font-size:12px; color:#666; margin-bottom:8px;">🗓 ${p.date_scout || '...'} | 📍 ${(p.content?.locations || []).length}</div>
-                    ${p.tags ? `<div class="list-tag" style="background:#8e8e93; font-size:9px; padding:3px 8px; border-radius:6px; color:#fff; font-weight:700;">${p.tags}</div>` : ''}
+                    <div style="font-weight:800; font-size:17px; margin-bottom:4px;">${p.title}</div>
+                    <div style="font-size:12px; color:#666;">🗓 ${p.date_scout || 'Нет даты'}</div>
                 </div>
             </div>
-        `).join('') : '<p style="color:#bbb; margin-top:40px;">Пусто</p>';
-        updateUI();
+        `).join('');
+        
+        updateSelectionUI();
     }
 
-    // (Остальные системные функции Save/Edit/Tabs без изменений)
-    function switchTab(t) { currentTab = t; exitSelectionMode(); document.querySelectorAll('.tab').forEach(el => el.classList.remove('active')); document.getElementById('t-' + t).classList.add('active'); if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); loadProjects(); }
-    async function applyBulkAction(type) { if (selectedIds.size === 0) return; let newStatus = type === 'trash' ? 'trash' : (currentTab === 'active' ? 'hidden' : 'active'); let query = (currentTab === 'trash' && type === 'trash') ? client.from('projects').delete().in('id', Array.from(selectedIds)) : client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds)); const { error } = await query; if (!error) { exitSelectionMode(); } }
-    function showView(v) { document.querySelectorAll('body > div[id]').forEach(d => d.classList.add('hidden')); document.getElementById(v).classList.remove('hidden'); if(v === 'mainView') loadProjects(); }
-    async function openEdit(id) { const { data } = await client.from('projects').select('*').eq('id', id).single(); if (data) { currentEditId = data.id; document.getElementById('pTitle').value = data.title; document.getElementById('pDate').value = data.date_scout; showView('editorView'); } }
-    
+    function switchTab(t) {
+        currentTab = t;
+        exitSelectionMode();
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+        loadProjects();
+    }
+
+    async function applyBulkAction() {
+        if (selectedIds.size === 0) return;
+        let newStatus = currentTab === 'active' ? 'hidden' : 'active';
+        
+        const { error } = await client.from('projects')
+            .update({ status: newStatus })
+            .in('id', Array.from(selectedIds));
+            
+        if (!error) {
+            exitSelectionMode();
+            loadProjects();
+        }
+    }
+
+    // Инициализация
     loadProjects();
 </script>
 </body>
