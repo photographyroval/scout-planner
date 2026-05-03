@@ -36,13 +36,12 @@
         .container { padding: 15px 20px; display: flex; flex-direction: column; align-items: center; }
         .btn-black { background: #000; color: #fff; width: 100%; max-width: 350px; margin: 0 auto; display: flex; }
         
-        /* Стили для свайпов */
-        .project-wrapper { width: 100%; max-width: 350px; position: relative; margin-bottom: 10px; overflow: hidden; border-radius: 16px; }
-        .swipe-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; font-weight: 700; border-radius: 16px; }
+        .project-wrapper { width: 100%; max-width: 350px; position: relative; margin-bottom: 10px; overflow: hidden; border-radius: 16px; background: #eee; }
+        .swipe-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; padding: 0 20px; color: #fff; font-size: 20px; border-radius: 16px; }
         .bg-hide { background: #8e8e93; justify-content: flex-start; }
         .bg-delete { background: #ff3b30; justify-content: flex-end; }
         
-        .project-card { border: 1px solid #eee; border-radius: 16px; padding: 15px; display: flex; align-items: center; width: 100%; box-sizing: border-box; background: #fff; position: relative; z-index: 2; transition: transform 0.1s ease-out; }
+        .project-card { border: 1px solid #eee; border-radius: 16px; padding: 15px; display: flex; align-items: center; width: 100%; box-sizing: border-box; background: #fff; position: relative; z-index: 2; transform: translateX(0); }
         .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; }
         
         .card-checkbox { width: 20px; height: 20px; margin-right: 12px; pointer-events: none; display: none; accent-color: #007aff; }
@@ -52,7 +51,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 01.23 SWIPE-ACTIONS</div>
+<div class="version-tag">v. 01.24 SWIPE-FIXED-EYE</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -82,18 +81,16 @@
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
     let currentTab = 'active', selectedIds = new Set(), isSelectionMode = false;
-    let pressTimer, startX, currentX, swipedId = null;
+    let pressTimer, startX, swipedId = null, moveOccurred = false;
 
-    // СВАЙПЫ
     function touchStart(e, id) {
-        if (isSelectionMode) return;
         startX = e.touches[0].clientX;
         swipedId = id;
+        moveOccurred = false;
         
-        // Long press
         clearTimeout(pressTimer);
         pressTimer = setTimeout(() => {
-            if (Math.abs(currentX - startX) < 10) {
+            if (!moveOccurred) {
                 isSelectionMode = true;
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
                 toggleId(id);
@@ -102,45 +99,51 @@
     }
 
     function touchMove(e) {
-        if (isSelectionMode) return;
-        currentX = e.touches[0].clientX;
+        let currentX = e.touches[0].clientX;
         let diff = currentX - startX;
+        
         if (Math.abs(diff) > 10) {
+            moveOccurred = true;
             clearTimeout(pressTimer);
-            let card = document.querySelector(`[data-id="${swipedId}"]`);
-            if (card) card.style.transform = `translateX(${diff}px)`;
+            if (!isSelectionMode) {
+                let card = document.querySelector(`[data-id="${swipedId}"]`);
+                if (card) card.style.transform = `translateX(${diff}px)`;
+            }
         }
     }
 
     function touchEnd(e) {
-        if (isSelectionMode) return;
         clearTimeout(pressTimer);
+        if (isSelectionMode) return;
+        
         let card = document.querySelector(`[data-id="${swipedId}"]`);
         if (!card) return;
 
-        let diff = currentX - startX;
+        let finalDiff = parseFloat(card.style.transform.replace('translateX(', '').replace('px)', '')) || 0;
         card.style.transition = 'transform 0.3s ease';
         
-        if (diff > 120) { // Свайп вправо -> Скрыть
+        if (finalDiff > 120) { 
+            // Скрыть
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
             applySingleAction(swipedId, currentTab === 'active' ? 'hidden' : 'active', false);
-        } else if (diff < -120) { // Свайп влево -> Удалить
+        } else if (finalDiff < -120) { 
+            // Удалить
             applySingleAction(swipedId, 'trash', true);
         } else {
             card.style.transform = 'translateX(0)';
         }
-        setTimeout(() => card.style.transition = '', 300);
-        currentX = startX;
+        setTimeout(() => { if(card) card.style.transition = ''; }, 300);
     }
 
     async function applySingleAction(id, newStatus, needConfirm) {
         const action = async () => {
-            const { error } = await client.from('projects').update({ status: newStatus }).eq('id', id);
-            if (!error) loadProjects();
+            await client.from('projects').update({ status: newStatus }).eq('id', id);
+            loadProjects();
         };
 
         if (needConfirm) {
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-            tg.showConfirm("Переместить этот проект в корзину?", (ok) => {
+            tg.showConfirm("Переместить проект в корзину?", (ok) => {
                 if (ok) action();
                 else document.querySelector(`[data-id="${id}"]`).style.transform = 'translateX(0)';
             });
@@ -150,6 +153,7 @@
     }
 
     function handleCardClick(e, id) {
+        if (moveOccurred) return;
         if (isSelectionMode || currentTab === 'trash') {
             isSelectionMode = true;
             toggleId(id);
@@ -217,18 +221,8 @@
         renderSelectionState();
     }
 
-    async function purgeTrash() {
-        tg.showConfirm("Очистить всю корзину навсегда?", async (ok) => {
-            if (ok) {
-                await client.from('projects').delete().eq('user_id', uid).eq('status', 'trash');
-                loadProjects();
-            }
-        });
-    }
-
     async function applyBulkAction(type) {
         if (selectedIds.size === 0) return;
-        
         const action = async () => {
             if (currentTab === 'trash' && type === 'trash') {
                 await client.from('projects').delete().in('id', Array.from(selectedIds));
@@ -242,10 +236,19 @@
 
         if (type === 'trash' || currentTab === 'trash') {
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-            tg.showConfirm("Выполнить удаление?", (ok) => { if (ok) action(); });
+            tg.showConfirm("Подтвердите безвозвратное действие", (ok) => { if (ok) action(); });
         } else {
             action();
         }
+    }
+
+    function purgeTrash() {
+        tg.showConfirm("Очистить всю корзину навсегда?", async (ok) => {
+            if (ok) {
+                await client.from('projects').delete().eq('user_id', uid).eq('status', 'trash');
+                loadProjects();
+            }
+        });
     }
 
     async function loadProjects() {
@@ -253,8 +256,8 @@
         const list = document.getElementById('projectList');
         list.innerHTML = (data || []).map(p => `
             <div class="project-wrapper">
-                <div class="swipe-bg bg-hide">Скрыть</div>
-                <div class="swipe-bg bg-delete">Удалить</div>
+                <div class="swipe-bg bg-hide">👁‍🗨</div>
+                <div class="swipe-bg bg-delete">🗑</div>
                 <div class="project-card" 
                      data-id="${p.id}"
                      ontouchstart="touchStart(event, '${p.id}')"
