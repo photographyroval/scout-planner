@@ -22,13 +22,13 @@
         .btn-action-main { background: #000; color: #fff; }
 
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; }
+        .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; cursor: pointer; }
         
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; background: #fff; transition: transform 0.1s; position: relative; overflow: hidden; }
-        .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; }
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; background: #fff; transition: all 0.2s ease; position: relative; cursor: pointer; }
+        .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; transform: scale(0.98); }
         
-        /* Чекбоксы теперь видны только в режиме выбора */
-        .card-checkbox { width: 22px; height: 22px; margin-right: 15px; pointer-events: none; display: none; }
+        /* Чекбокс */
+        .card-checkbox { width: 22px; height: 22px; margin-right: 15px; pointer-events: none; display: none; accent-color: #007aff; }
         .selection-mode .card-checkbox { display: block; }
         
         .card-content { flex: 1; pointer-events: none; }
@@ -37,7 +37,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 01.14 SELECTION-PRO</div>
+<div class="version-tag">v. 01.15 CHECKBOX-FIX</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -68,21 +68,18 @@
     let currentTab = 'active', isSelectionMode = false, selectedIds = new Set();
     let pressTimer, isLongPressOccurred = false;
 
-    // ГЛОБАЛЬНЫЕ ФУНКЦИИ ВЫБОРА
+    // ОБРАБОТКА НАЖАТИЙ
     function startPress(e, id) {
         isLongPressOccurred = false;
-        // Очищаем старый таймер если он был
         clearTimeout(pressTimer);
-        
         pressTimer = setTimeout(() => {
             isLongPressOccurred = true;
             if (!isSelectionMode) {
                 isSelectionMode = true;
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
                 toggleId(id);
-                updateSelectionUI();
             }
-        }, 600); // 0.6 сек для активации
+        }, 600);
     }
 
     function endPress() {
@@ -90,18 +87,15 @@
     }
 
     function handleCardClick(e, id) {
-        // Если это был Long Press — игнорируем клик, чтобы не открылся редактор
         if (isLongPressOccurred) {
             isLongPressOccurred = false;
             return;
         }
-
         if (isSelectionMode || currentTab === 'trash') {
             toggleId(id);
         } else {
-            // Обычный клик - открываем редактор (функция openEdit должна быть определена)
-            console.log("Open Editor for:", id);
-            // openEdit(id); 
+            // Здесь будет открытие редактора
+            console.log("Редактировать:", id);
         }
     }
 
@@ -114,13 +108,31 @@
         
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         
-        // Если в активных/скрытых сняли всё выделение — выходим из режима
         if (selectedIds.size === 0 && currentTab !== 'trash') {
             isSelectionMode = false;
         }
         
         updateSelectionUI();
-        renderSelectionState(); // Перерисовываем чекбоксы и стили
+        renderSelectionState(); 
+    }
+
+    function renderSelectionState() {
+        // Проходим по всем карточкам и синхронизируем визуальное состояние
+        document.querySelectorAll('.project-card').forEach(card => {
+            const id = card.getAttribute('data-id');
+            const checkbox = card.querySelector('.card-checkbox');
+            const isSelected = selectedIds.has(id);
+            
+            if (isSelected) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+            
+            if (checkbox) {
+                checkbox.checked = isSelected; // Принудительно ставим галочку
+            }
+        });
     }
 
     function updateSelectionUI() {
@@ -134,7 +146,6 @@
             actions.style.display = 'flex';
             addBtn.style.display = 'none';
             
-            // Текст кнопки в зависимости от таба
             let count = selectedIds.size;
             if (currentTab === 'active') mainBtn.innerText = `Скрыть (${count})`;
             else if (currentTab === 'hidden') mainBtn.innerText = `В актив (${count})`;
@@ -144,20 +155,6 @@
             actions.style.display = 'none';
             addBtn.style.display = (currentTab === 'active') ? 'block' : 'none';
         }
-    }
-
-    function renderSelectionState() {
-        document.querySelectorAll('.project-card').forEach(card => {
-            const id = card.getAttribute('data-id');
-            const checkbox = card.querySelector('.card-checkbox');
-            if (selectedIds.has(id)) {
-                card.classList.add('selected');
-                if (checkbox) checkbox.checked = true;
-            } else {
-                card.classList.remove('selected');
-                if (checkbox) checkbox.checked = false;
-            }
-        });
     }
 
     function exitSelectionMode() {
@@ -198,6 +195,7 @@
         `).join('');
         
         updateSelectionUI();
+        renderSelectionState();
     }
 
     function switchTab(t) {
@@ -211,18 +209,15 @@
     async function applyBulkAction() {
         if (selectedIds.size === 0) return;
         let newStatus = currentTab === 'active' ? 'hidden' : 'active';
-        
-        const { error } = await client.from('projects')
-            .update({ status: newStatus })
-            .in('id', Array.from(selectedIds));
-            
-        if (!error) {
-            exitSelectionMode();
-            loadProjects();
-        }
+        const { error } = await client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds));
+        if (!error) { exitSelectionMode(); loadProjects(); }
     }
 
-    // Инициализация
+    function createNewProject() {
+        // Здесь логика открытия пустого редактора
+        console.log("Создать новый проект");
+    }
+
     loadProjects();
 </script>
 </body>
