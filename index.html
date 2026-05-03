@@ -6,65 +6,90 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; overflow-x: hidden; }
-        .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10001; pointer-events: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 15px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
         
-        .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 15px 20px 10px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
-        .reload-btn { position: absolute; left: 15px; top: 18px; background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; opacity: 0.5; }
-        
-        h2 { font-size: 18px; margin: 0 0 15px 0; font-weight: 800; }
-        
-        .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        /* Табы */
+        .tabs { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
         .tab { font-size: 12px; font-weight: 700; color: #999; padding: 6px 14px; border-radius: 10px; cursor: pointer; background: #f5f5f5; border: none; }
         .tab.active[data-tab="active"] { background: #34c759; color: #fff; }
         .tab.active[data-tab="hidden"] { background: #8e8e93; color: #fff; }
         .tab.active[data-tab="trash"] { background: #ff3b30; color: #fff; }
 
-        .btn-base { height: 48px; border-radius: 14px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
-        .btn-black { background: #000 !important; color: #fff !important; width: calc(100% - 40px); max-width: 350px; margin: 10px auto; display: flex; position: relative; z-index: 1001; }
+        /* Кнопки */
+        .btn-base { height: 48px; border-radius: 14px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-black { background: #000; color: #fff; width: calc(100% - 40px); max-width: 350px; margin: 15px auto; }
         
-        .container { padding: 15px 20px; display: flex; flex-direction: column; align-items: center; }
+        /* Модалка создания */
+        .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 700; color: #666; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; }
         
-        .project-wrapper { width: 100%; max-width: 350px; position: relative; margin-bottom: 10px; overflow: hidden; border-radius: 16px; background: #eee; }
-        .swipe-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; padding: 0 20px; color: #fff; font-size: 20px; border-radius: 16px; }
-        .bg-hide { background: #8e8e93; justify-content: flex-start; }
-        .bg-delete { background: #ff3b30; justify-content: flex-end; }
+        .section-box { border: 1px solid #eee; border-radius: 15px; padding: 15px; margin-bottom: 15px; background: #fff; }
+        .section-title { font-size: 14px; font-weight: 800; margin-bottom: 10px; display: flex; justify-content: space-between; }
         
-        .project-card { border: 1px solid #eee; border-radius: 16px; padding: 15px; display: flex; align-items: center; width: 100%; box-sizing: border-box; background: #fff; position: relative; z-index: 2; transform: translateX(0); }
-        .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; }
-        
-        .card-checkbox { width: 20px; height: 20px; margin-right: 12px; display: none; }
-        .selection-mode .card-checkbox { display: block; }
-        
-        .selection-actions { display: none; gap: 6px; width: 100%; max-width: 350px; margin: 0 auto; }
-        .theme-active { background: #8e8e93; color: #fff; }
-        .theme-hidden { background: #34c759; color: #fff; }
-        .theme-trash-restore { background: #34c759; color: #fff; }
-        .theme-trash-del { background: #ff3b30; color: #fff; }
+        .project-card { border: 1px solid #eee; border-radius: 16px; padding: 15px; margin-bottom: 10px; background: #fff; width: 100%; max-width: 350px; box-sizing: border-box; }
+        .selection-actions { display: none; gap: 6px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="version-tag">v. 01.29 RECOVERY-FIX</div>
-
 <div id="mainView">
     <div class="header-sticky">
-        <button class="reload-btn" onclick="window.location.reload()">🔄</button>
-        <h2>Локации</h2>
+        <h2 style="margin:0; font-size:18px;">Локации</h2>
         <div class="tabs">
             <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">Активные</div>
             <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">Скрытые</div>
-            <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')" oncontextmenu="handleRightClick(event)">Корзина</div>
-        </div>
-        <div id="selectionActions" class="selection-actions">
-            <button class="btn-base" style="background:#f2f2f2; flex:1" onclick="exitSelectionMode()">Отмена</button>
-            <button id="mainActionBtn" class="btn-base" style="flex:2" onclick="applyBulkAction()">Действие</button>
-            <button id="deleteActionBtn" class="btn-base" style="flex:1" onclick="applyBulkAction('trash')">🗑</button>
+            <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')" oncontextmenu="handleTrashContext(event)">Корзина</div>
         </div>
     </div>
     
-    <button id="addBtn" class="btn-base btn-black" onclick="handleCreateClick()">+ Создать план</button>
-    <div class="container" id="projectList"></div>
+    <button id="addBtn" class="btn-base btn-black" onclick="openCreateModal()">+ Создать план</button>
+    <div id="projectList" style="padding: 20px; display: flex; flex-direction: column; align-items: center;"></div>
+</div>
+
+<!-- ТВОИ ОКНА СОЗДАНИЯ -->
+<div id="createModal" class="full-modal">
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin:0">Новый план</h2>
+        <button onclick="closeCreateModal()" style="background:none; border:none; font-size: 24px;">✕</button>
+    </div>
+
+    <div class="form-group">
+        <label>НАЗВАНИЕ ПРОЕКТА</label>
+        <input type="text" id="f-title" placeholder="Например: Съемка рекламы">
+    </div>
+
+    <div style="display:flex; gap:10px;">
+        <div class="form-group" style="flex:1">
+            <label>ДАТА</label>
+            <input type="date" id="f-date">
+        </div>
+        <div class="form-group" style="flex:1">
+            <label>МЕСТО СБОРА</label>
+            <input type="text" id="f-meeting" placeholder="Адрес">
+        </div>
+    </div>
+
+    <div id="locationsWrapper">
+        <div class="section-box">
+            <div class="section-title">ЛОКАЦИЯ 1</div>
+            <input type="text" class="l-name" placeholder="Название или адрес" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;">
+        </div>
+    </div>
+    
+    <button onclick="addLocationField()" style="background:none; border:none; color:#007aff; font-weight:700; margin-bottom:20px;">+ Добавить локацию</button>
+
+    <div class="section-box">
+        <div class="section-title">ОБЕДЕННЫЙ ПЕРЕРЫВ</div>
+        <div style="display:flex; gap:10px;">
+            <input type="time" id="f-lunch-start" style="flex:1; padding:10px; border-radius:8px; border:1px solid #eee;">
+            <input type="time" id="f-lunch-end" style="flex:1; padding:10px; border-radius:8px; border:1px solid #eee;">
+        </div>
+    </div>
+
+    <button class="btn-base btn-black" style="width:100%; margin-top: auto;" onclick="saveNewPlan()">Сохранить план</button>
 </div>
 
 <script>
@@ -74,142 +99,74 @@
     const tg = window.Telegram.WebApp;
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
-    let currentTab = 'active', selectedIds = new Set(), isSelectionMode = false;
-    let pressTimer, trashPressTimer, startX, swipedId = null, moveOccurred = false;
+    let currentTab = 'active';
 
-    // --- Кнопка создания (как было раньше) ---
-    function handleCreateClick() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        // Здесь вызывается твой старый prompt или переход, который был до моих правок
-        tg.showAlert("Окно создания плана активно!"); 
+    function openCreateModal() { document.getElementById('createModal').style.display = 'flex'; }
+    function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
+
+    function addLocationField() {
+        const wrapper = document.getElementById('locationsWrapper');
+        const index = wrapper.children.length + 1;
+        const div = document.createElement('div');
+        div.className = 'section-box';
+        div.innerHTML = `<div class="section-title">ЛОКАЦИЯ ${index}</div><input type="text" class="l-name" placeholder="Название или адрес" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;">`;
+        wrapper.appendChild(div);
     }
 
-    // --- Очистка и звук ---
-    async function purgeTrash() {
-        tg.showConfirm("Очистить всю корзину навсегда?", async (ok) => {
-            if (ok) {
-                const { error } = await client.from('projects').delete().eq('user_id', uid).eq('status', 'trash');
-                if (!error) {
-                    // Симуляция звука через Haptic + нативный звук уведомления TG
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                    loadProjects();
-                }
-            }
-        });
+    async function saveNewPlan() {
+        const title = document.getElementById('f-title').value;
+        if (!title) return tg.showAlert("Введите название!");
+
+        const locs = Array.from(document.querySelectorAll('.l-name')).map(el => el.value);
+        
+        const { error } = await client.from('projects').insert([{
+            user_id: uid,
+            title: title,
+            date_scout: document.getElementById('f-date').value,
+            meeting_point: document.getElementById('f-meeting').value,
+            locations: locs,
+            lunch_time: `${document.getElementById('f-lunch-start').value} - ${document.getElementById('f-lunch-end').value}`,
+            status: 'active'
+        }]);
+
+        if (!error) {
+            closeCreateModal();
+            loadProjects();
+        }
     }
 
-    function handleRightClick(e) { e.preventDefault(); triggerTrashMenu(); return false; }
-    const trashTab = document.getElementById('t-trash');
-    trashTab.addEventListener('touchstart', (e) => { trashPressTimer = setTimeout(triggerTrashMenu, 800); });
-    trashTab.addEventListener('touchend', () => clearTimeout(trashPressTimer));
-
-    function triggerTrashMenu() {
-        tg.showActionSheet({
-            title: 'Управление корзиной',
-            buttons: [{ text: 'Очистить всю корзину', type: 'destructive' }]
-        }, (index) => { if (index === 0) purgeTrash(); });
-    }
-
-    // --- Навигация и Списки ---
     async function loadProjects() {
         const { data } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
         list.innerHTML = (data || []).map(p => `
-            <div class="project-wrapper">
-                <div class="swipe-bg bg-hide">👁‍🗨</div>
-                <div class="swipe-bg bg-delete">🗑</div>
-                <div class="project-card" data-id="${p.id}"
-                     ontouchstart="touchStart(event, '${p.id}')"
-                     ontouchmove="touchMove(event)"
-                     ontouchend="touchEnd(event)"
-                     onclick="handleCardClick(event, '${p.id}')">
-                    <input type="checkbox" class="card-checkbox">
-                    <div style="flex:1; pointer-events:none;">
-                        <div style="font-weight:800; font-size:16px;">${p.title}</div>
-                        <div style="font-size:11px; color:#666;">🗓 ${p.date_scout || 'Нет даты'}</div>
-                    </div>
-                </div>
+            <div class="project-card">
+                <div style="font-weight:800; font-size:16px;">${p.title}</div>
+                <div style="font-size:12px; color:#666; margin-top:5px;">🗓 ${p.date_scout || 'Нет даты'}</div>
             </div>
         `).join('');
-        updateSelectionUI();
     }
 
     function switchTab(t) {
         currentTab = t;
-        exitSelectionMode();
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.querySelector(`[data-tab="${t}"]`).classList.add('active');
+        document.getElementById(`t-${t}`).classList.add('active');
+        document.getElementById('addBtn').style.display = (t === 'active') ? 'flex' : 'none';
         loadProjects();
     }
 
-    // --- Логика выбора (Selection Mode) ---
-    function toggleId(id) {
-        if (selectedIds.has(id)) selectedIds.delete(id);
-        else selectedIds.add(id);
-        if (selectedIds.size === 0) isSelectionMode = false;
-        updateSelectionUI(); renderSelectionState();
-    }
-
-    function renderSelectionState() {
-        document.querySelectorAll('.project-card').forEach(card => {
-            const id = card.getAttribute('data-id');
-            const isSelected = selectedIds.has(id);
-            card.classList.toggle('selected', isSelected);
-            const cb = card.querySelector('.card-checkbox');
-            if (cb) cb.checked = isSelected;
+    function handleTrashContext(e) {
+        e.preventDefault();
+        tg.showActionSheet({
+            title: 'Управление корзиной',
+            buttons: [{ text: 'Очистить всю корзину', type: 'destructive' }]
+        }, async (index) => {
+            if (index === 0) {
+                await client.from('projects').delete().eq('user_id', uid).eq('status', 'trash');
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                loadProjects();
+            }
         });
     }
-
-    function updateSelectionUI() {
-        const actions = document.getElementById('selectionActions');
-        const addBtn = document.getElementById('addBtn');
-        const mainBtn = document.getElementById('mainActionBtn');
-        const delBtn = document.getElementById('deleteActionBtn');
-
-        if (selectedIds.size > 0) {
-            actions.style.display = 'flex'; addBtn.style.display = 'none';
-            let count = selectedIds.size;
-            if (currentTab === 'active') {
-                mainBtn.innerText = `Скрыть (${count})`; mainBtn.className = "btn-base theme-active";
-            } else if (currentTab === 'hidden') {
-                mainBtn.innerText = `В актив (${count})`; mainBtn.className = "btn-base theme-hidden";
-            } else {
-                mainBtn.innerText = `Вернуть (${count})`; mainBtn.className = "btn-base theme-hidden";
-                delBtn.innerText = "Удалить"; delBtn.className = "btn-base theme-trash-del";
-            }
-        } else {
-            actions.style.display = 'none';
-            addBtn.style.display = (currentTab === 'active') ? 'flex' : 'none';
-        }
-    }
-
-    function exitSelectionMode() {
-        isSelectionMode = false; selectedIds.clear();
-        updateSelectionUI(); renderSelectionState();
-    }
-
-    // --- Вспомогательные функции Touch ---
-    function touchStart(e, id) {
-        startX = e.touches[0].clientX; swipedId = id; moveOccurred = false;
-        pressTimer = setTimeout(() => { if (!moveOccurred) { isSelectionMode = true; toggleId(id); } }, 600);
-    }
-    function touchMove(e) { 
-        moveOccurred = true; 
-        let diff = e.touches[0].clientX - startX;
-        if (!isSelectionMode && Math.abs(diff) > 20) {
-            let card = document.querySelector(`[data-id="${swipedId}"]`);
-            if (card) card.style.transform = `translateX(${diff}px)`;
-        }
-    }
-    function touchEnd() {
-        clearTimeout(pressTimer);
-        let card = document.querySelector(`[data-id="${swipedId}"]`);
-        if (card && !isSelectionMode) {
-            card.style.transition = 'transform 0.3s';
-            card.style.transform = 'translateX(0)';
-        }
-    }
-    function handleCardClick(e, id) { if (!moveOccurred && isSelectionMode) toggleId(id); }
 
     loadProjects();
 </script>
