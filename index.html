@@ -14,21 +14,32 @@
         
         h2 { font-size: 20px; margin: 0 0 20px 0; font-weight: 800; }
         
-        .tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; }
-        .tab { font-size: 13px; font-weight: 700; color: #999; padding: 8px 16px; border-radius: 12px; cursor: pointer; background: #f5f5f5; border: none; }
-        .tab.active { background: #000; color: #fff; }
+        .tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; align-items: center; }
+        .tab { font-size: 13px; font-weight: 700; color: #999; padding: 8px 16px; border-radius: 12px; cursor: pointer; background: #f5f5f5; border: none; transition: all 0.3s ease; }
+        
+        /* Цвета вкладок для синхронизации с кнопками */
+        .tab[data-tab="active"].active { background: #34c759; color: #fff; }
+        .tab[data-tab="hidden"].active { background: #8e8e93; color: #fff; }
+        .tab[data-tab="trash"].active { background: #ff3b30; color: #fff; }
 
-        /* Унификация кнопок */
         .selection-actions { display: none; gap: 8px; width: 100%; max-width: 350px; margin: 0 auto; }
         
-        .btn-base { height: 58px; border-radius: 16px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+        .btn-base { height: 58px; border-radius: 16px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box; transition: opacity 0.2s; }
+        .btn-base:active { opacity: 0.7; }
         
         .btn-cancel { background: #f2f2f2; color: #000; flex: 1; }
-        .btn-action-main { background: #000; color: #fff; flex: 2; }
-        .btn-action-delete { background: #ffebeb; color: #ff3b30; flex: 1; }
+        .btn-action-main { flex: 2; color: #fff; }
+        .btn-action-delete { flex: 1; font-size: 18px; }
+
+        /* Динамические цвета кнопок действий */
+        .theme-active { background: #8e8e93; } /* Кнопка "Скрыть" (цвет Скрытых) */
+        .theme-hidden { background: #34c759; } /* Кнопка "В актив" (цвет Активных) */
+        .theme-trash-restore { background: #34c759; } 
+        .theme-trash-del { background: #ff3b30; color: #fff !important; } /* Удалить навсегда */
+        .theme-to-trash { background: #ffebeb; color: #ff3b30 !important; } /* В корзину */
 
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .btn-black { background: #000; color: #fff; width: 100%; max-width: 350px; margin: 0 auto; }
+        .btn-black { background: #000; color: #fff; width: 100%; max-width: 350px; margin: 0 auto; display: flex; }
         
         .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; background: #fff; transition: all 0.2s ease; position: relative; cursor: pointer; }
         .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; transform: scale(0.98); }
@@ -36,30 +47,31 @@
         .card-checkbox { width: 22px; height: 22px; margin-right: 15px; pointer-events: none; display: none; accent-color: #007aff; }
         .selection-mode .card-checkbox { display: block; }
         .card-content { flex: 1; pointer-events: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="version-tag">v. 01.18 UI-BUTTONS-SYNC</div>
+<div class="version-tag">v. 01.19 CONTEXT-COLORS</div>
 
 <div id="mainView">
     <div class="header-sticky">
         <button class="reload-btn" onclick="window.location.reload()">🔄</button>
         <h2>Локации</h2>
         <div class="tabs">
-            <div id="t-active" class="tab active" onclick="switchTab('active')">Активные</div>
-            <div id="t-hidden" class="tab" onclick="switchTab('hidden')">Скрытые</div>
-            <div id="t-trash" class="tab" onclick="switchTab('trash')">Корзина</div>
+            <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">Активные</div>
+            <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">Скрытые</div>
+            <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">Корзина</div>
         </div>
         
-        <!-- Панель выбора -->
+        <!-- Кнопки действий (видны только при выделении) -->
         <div id="selectionActions" class="selection-actions">
             <button class="btn-base btn-cancel" onclick="exitSelectionMode()">Отмена</button>
             <button id="mainActionBtn" class="btn-base btn-action-main" onclick="applyBulkAction()">Действие</button>
             <button id="deleteActionBtn" class="btn-base btn-action-delete" onclick="applyBulkAction('trash')">🗑</button>
         </div>
 
-        <!-- Основная кнопка -->
+        <!-- Кнопка создания (видна в обычном режиме) -->
         <button id="addBtn" class="btn-base btn-black" onclick="createNewProject()">+ Создать план</button>
     </div>
     <div class="container" id="projectList"></div>
@@ -122,6 +134,10 @@
         const mainBtn = document.getElementById('mainActionBtn');
         const delBtn = document.getElementById('deleteActionBtn');
 
+        // Очистка старых тем
+        mainBtn.className = "btn-base btn-action-main";
+        delBtn.className = "btn-base btn-action-delete";
+
         if (isSelectionMode || currentTab === 'trash') {
             list.classList.add('selection-mode');
             actions.style.display = 'flex';
@@ -130,17 +146,19 @@
             let count = selectedIds.size;
             if (currentTab === 'active') {
                 mainBtn.innerText = `Скрыть (${count})`;
+                mainBtn.classList.add('theme-active'); // Серый (как скрытые)
+                delBtn.classList.add('theme-to-trash'); // Светло-красный
                 delBtn.style.display = 'flex';
-                delBtn.style.flex = "1";
-                mainBtn.style.flex = "2";
             } else if (currentTab === 'hidden') {
                 mainBtn.innerText = `В актив (${count})`;
+                mainBtn.classList.add('theme-hidden'); // Зеленый (как активные)
+                delBtn.classList.add('theme-to-trash'); 
                 delBtn.style.display = 'flex';
-                delBtn.style.flex = "1";
-                mainBtn.style.flex = "2";
             } else {
                 mainBtn.innerText = `Вернуть (${count})`;
+                mainBtn.classList.add('theme-trash-restore'); // Зеленый
                 delBtn.innerText = "Удалить";
+                delBtn.classList.add('theme-trash-del'); // Ярко-красный
                 delBtn.style.flex = "2";
                 mainBtn.style.flex = "1";
             }
@@ -187,7 +205,7 @@
         currentTab = t;
         exitSelectionMode();
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelector(`.tab[data-tab="${t}"]`).classList.add('active');
         loadProjects();
     }
 
@@ -207,9 +225,7 @@
         }
     }
 
-    function createNewProject() {
-        console.log("Create Project");
-    }
+    function createNewProject() { console.log("Create Project"); }
 
     loadProjects();
 </script>
