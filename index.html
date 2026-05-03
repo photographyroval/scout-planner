@@ -30,24 +30,20 @@
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; }
         
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; cursor: pointer; transition: background 0.2s; }
-        .project-card.selected { border: 2px solid #007aff !important; background: #f0f7ff !important; }
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; cursor: pointer; transition: all 0.2s ease; }
+        .project-card.selected { border: 2px solid #007aff !important; background: #f0f7ff !important; transform: scale(0.98); }
         
         .card-content { flex: 1; pointer-events: none; }
-        .list-tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; display: inline-block; width: fit-content; }
-        
         .card-checkbox { width: 20px; height: 20px; margin-right: 12px; pointer-events: none; accent-color: #007aff; display: none; }
         .selection-mode .card-checkbox { display: block; }
 
         .main-input { width: 100%; padding: 14px; border: 1px solid #efefef; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; background: #f9f9f9; color: #000; caret-color: #000; outline: none; user-select: text; -webkit-user-select: text; }
-        .main-input:focus { border-color: #007aff; background: #fff; }
-
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="version-tag">v. 01.11 PC-FIX</div>
+<div class="version-tag">v. 01.12 STABLE-SEL</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -70,7 +66,7 @@
     <div class="container" id="projectList"></div>
 </div>
 
-<!-- Редактор и навигация остаются прежними -->
+<!-- Окна редактора -->
 <div id="editorView" class="hidden">
     <div style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
         <button onclick="showView('mainView')" style="background:none; border:none; color:#007aff; font-weight:600;">Отмена</button>
@@ -117,12 +113,10 @@
     let currentTab = 'active', isSelectionMode = false, selectedIds = new Set();
     let locations = [], currentEditId = null, pressTimer;
 
-    // Маски для клавиатуры
+    // Логика масок
     document.addEventListener('keydown', (e) => {
         if (!e.target.classList.contains('mask-input')) return;
-        const input = e.target;
-        const key = e.key;
-        const sep = input.dataset.mask === 'date' ? '.' : ':';
+        const input = e.target; const key = e.key; const sep = input.dataset.mask === 'date' ? '.' : ':';
         if (['ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Shift'].includes(key)) return;
         if (key === 'Backspace') {
             let pos = input.selectionStart;
@@ -134,53 +128,61 @@
             return;
         }
         if (!/\d/.test(key)) { e.preventDefault(); return; }
-        if (input.value.replace(/\D/g, '').length === 2 && input.selectionStart === 2) {
-            input.value += sep;
-        }
+        if (input.value.replace(/\D/g, '').length === 2 && input.selectionStart === 2) input.value += sep;
     });
 
     document.addEventListener('input', (e) => {
         if (!e.target.classList.contains('mask-input')) return;
-        const input = e.target;
-        const sep = input.dataset.mask === 'date' ? '.' : ':';
+        const input = e.target; const sep = input.dataset.mask === 'date' ? '.' : ':';
         let val = input.value.replace(/\D/g, '');
         if (val.length > 2) input.value = val.slice(0, 2) + sep + val.slice(2, 4);
         else input.value = val;
     });
 
-    // Логика выбора без сброса
-    function handleCardClick(id) {
-        const el = document.querySelector(`[data-id="${id}"]`);
+    // НОВАЯ ЛОГИКА ВЫБОРА ДЛЯ ПК И ТАЧПАДА
+    function onCardStart(e, id) {
+        if (currentTab === 'trash' || isSelectionMode) return;
+        
+        // Запускаем таймер на 600мс
+        pressTimer = setTimeout(() => {
+            activateSelectionMode(id);
+        }, 600);
+    }
+
+    function onCardEnd() {
+        clearTimeout(pressTimer);
+    }
+
+    function activateSelectionMode(id) {
+        isSelectionMode = true;
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        toggleSelection(id);
+        updateUI();
+    }
+
+    function handleCardClick(e, id) {
+        // Если уже в режиме выбора, просто переключаем чекбокс
         if (isSelectionMode || currentTab === 'trash') {
-            toggleSelection(el, id);
+            toggleSelection(id);
         } else {
+            // Если обычный клик (не зажатие), открываем редактор
             openEdit(id);
         }
     }
 
-    function startPress(id) {
-        if (currentTab === 'trash') return;
-        pressTimer = setTimeout(() => {
-            isSelectionMode = true;
-            const el = document.querySelector(`[data-id="${id}"]`);
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-            toggleSelection(el, id);
-            updateUI();
-        }, 700);
-    }
-
-    function endPress() { clearTimeout(pressTimer); }
-
-    function toggleSelection(el, id) {
-        if (!el) return;
+    function toggleSelection(id) {
+        const el = document.querySelector(`[data-id="${id}"]`);
         if (selectedIds.has(id)) {
             selectedIds.delete(id);
-            el.classList.remove('selected');
+            if (el) el.classList.remove('selected');
         } else {
             selectedIds.add(id);
-            el.classList.add('selected');
+            if (el) el.classList.add('selected');
         }
+        
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        
+        // Если сняли выделение со всего — выходим из режима (кроме корзины)
         if (selectedIds.size === 0 && currentTab !== 'trash') {
             exitSelectionMode();
         } else {
@@ -200,17 +202,14 @@
         const mainBtn = document.getElementById('mainActionBtn'), delBtn = document.getElementById('deleteActionBtn');
         const list = document.getElementById('projectList');
 
-        if (isSelectionMode || currentTab === 'trash') {
-            list.classList.add('selection-mode');
-        } else {
-            list.classList.remove('selection-mode');
-        }
+        if (isSelectionMode || currentTab === 'trash') list.classList.add('selection-mode');
+        else list.classList.remove('selection-mode');
 
         if (selectedIds.size > 0 || (currentTab === 'trash' && isSelectionMode)) {
             actions.style.display = 'flex'; addBtn.style.display = 'none';
             if (currentTab === 'active') mainBtn.innerText = `Скрыть (${selectedIds.size})`;
             else if (currentTab === 'hidden') mainBtn.innerText = `В актив (${selectedIds.size})`;
-            else if (currentTab === 'trash') { mainBtn.innerText = `Восстановить (${selectedIds.size})`; delBtn.innerText = "Удалить"; }
+            else if (currentTab === 'trash') { mainBtn.innerText = `Вернуть (${selectedIds.size})`; delBtn.innerText = "Удалить"; }
         } else {
             actions.style.display = 'none'; addBtn.style.display = (currentTab === 'active') ? 'block' : 'none';
         }
@@ -223,25 +222,25 @@
         list.innerHTML = data?.length ? data.map(p => `
             <div class="project-card ${selectedIds.has(p.id) ? 'selected' : ''}" 
                  data-id="${p.id}"
-                 onclick="handleCardClick('${p.id}')" 
-                 onmousedown="startPress('${p.id}')" 
-                 onmouseup="endPress()" 
-                 onmouseleave="endPress()"
-                 ontouchstart="startPress('${p.id}')" 
-                 ontouchend="endPress()"
+                 onclick="handleCardClick(event, '${p.id}')"
+                 onmousedown="onCardStart(event, '${p.id}')"
+                 onmouseup="onCardEnd()"
+                 onmouseleave="onCardEnd()"
+                 ontouchstart="onCardStart(event, '${p.id}')"
+                 ontouchend="onCardEnd()"
                  oncontextmenu="return false;">
                 <input type="checkbox" class="card-checkbox" ${selectedIds.has(p.id) ? 'checked' : ''}>
                 <div class="card-content">
                     <div style="font-weight:800; font-size:18px; margin-bottom:4px;">${p.title}</div>
                     <div style="font-size:12px; color:#666; margin-bottom:8px;">🗓 ${p.date_scout || '...'} | 📍 ${(p.content?.locations || []).length}</div>
-                    ${p.tags ? `<div class="list-tag" style="background:#8e8e93">${p.tags}</div>` : ''}
+                    ${p.tags ? `<div class="list-tag" style="background:#8e8e93; font-size:9px; padding:3px 8px; border-radius:6px; color:#fff; font-weight:700;">${p.tags}</div>` : ''}
                 </div>
             </div>
         `).join('') : '<p style="color:#bbb; margin-top:40px;">Пусто</p>';
         updateUI();
     }
 
-    // Вспомогательные функции остаются без изменений
+    // Системные функции
     function switchTab(t) { currentTab = t; exitSelectionMode(); document.querySelectorAll('.tab').forEach(el => el.classList.remove('active')); document.getElementById('t-' + t).classList.add('active'); if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); loadProjects(); }
     async function applyBulkAction(type) { if (selectedIds.size === 0) return; let newStatus = type === 'trash' ? 'trash' : (currentTab === 'active' ? 'hidden' : 'active'); let query = (currentTab === 'trash' && type === 'trash') ? client.from('projects').delete().in('id', Array.from(selectedIds)) : client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds)); const { error } = await query; if (!error) { if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(type === 'trash' ? 'error' : 'success'); exitSelectionMode(); } }
     async function openEdit(id) { const { data } = await client.from('projects').select('*').eq('id', id).single(); if (data) { currentEditId = data.id; document.getElementById('pTitle').value = data.title; document.getElementById('pDate').value = data.date_scout; document.getElementById('pTagText').value = data.tags; const c = data.content || {}; document.getElementById('pTime').value = c.meeting_time || ''; document.getElementById('pExitTime').value = c.exit_time || ''; document.getElementById('pAddress').value = c.location_address || ''; locations = c.locations || []; renderLocations(); showView('editorView'); } }
