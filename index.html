@@ -7,37 +7,59 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; user-select: none; }
-        .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 15px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
         
-        /* Табы */
-        .tabs { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
-        .tab { font-size: 12px; font-weight: 700; color: #999; padding: 6px 14px; border-radius: 10px; cursor: pointer; background: #f5f5f5; border: none; }
+        /* Увеличенная шапка */
+        .header-sticky { 
+            position: sticky; 
+            top: 0; 
+            background: #fff; 
+            z-index: 1000; 
+            padding: 20px 25px; /* Увеличены отступы */
+            border-bottom: 1px solid #f2f2f2; 
+            text-align: center; 
+        }
+        
+        h2 { margin: 0 0 15px 0; font-size: 20px; font-weight: 800; }
+
+        /* Увеличенные табы */
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-top: 5px; }
+        .tab { 
+            font-size: 13px; /* Шрифт чуть больше */
+            font-weight: 700; 
+            color: #999; 
+            padding: 10px 18px; /* Увеличен размер кнопок */
+            border-radius: 12px; 
+            cursor: pointer; 
+            background: #f5f5f5; 
+            border: none; 
+            transition: all 0.2s ease;
+        }
         .tab.active[data-tab="active"] { background: #34c759; color: #fff; }
         .tab.active[data-tab="hidden"] { background: #8e8e93; color: #fff; }
         .tab.active[data-tab="trash"] { background: #ff3b30; color: #fff; }
 
         /* Кнопки */
-        .btn-base { height: 48px; border-radius: 14px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-black { background: #000; color: #fff; width: calc(100% - 40px); max-width: 350px; margin: 15px auto; }
+        .btn-base { height: 54px; border-radius: 16px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-black { background: #000; color: #fff; width: calc(100% - 40px); max-width: 350px; margin: 20px auto; }
+        .btn-black:active { transform: scale(0.98); opacity: 0.9; }
         
         /* Модалка создания */
-        .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 700; color: #666; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; }
+        .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; overflow-y: auto; padding: 25px; box-sizing: border-box; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 800; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; outline: none; }
         
-        .section-box { border: 1px solid #eee; border-radius: 15px; padding: 15px; margin-bottom: 15px; background: #fff; }
-        .section-title { font-size: 14px; font-weight: 800; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .section-box { border: 1px solid #f2f2f2; border-radius: 18px; padding: 20px; margin-bottom: 20px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .section-title { font-size: 14px; font-weight: 800; margin-bottom: 12px; color: #333; }
         
-        .project-card { border: 1px solid #eee; border-radius: 16px; padding: 15px; margin-bottom: 10px; background: #fff; width: 100%; max-width: 350px; box-sizing: border-box; }
-        .selection-actions { display: none; gap: 6px; margin-bottom: 10px; }
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 20px; margin-bottom: 12px; background: #fff; width: 100%; max-width: 350px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
 <div id="mainView">
     <div class="header-sticky">
-        <h2 style="margin:0; font-size:18px;">Локации</h2>
+        <h2>Локации</h2>
         <div class="tabs">
             <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">Активные</div>
             <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">Скрытые</div>
@@ -46,28 +68,28 @@
     </div>
     
     <button id="addBtn" class="btn-base btn-black" onclick="openCreateModal()">+ Создать план</button>
-    <div id="projectList" style="padding: 20px; display: flex; flex-direction: column; align-items: center;"></div>
+    <div id="projectList" style="padding: 10px 20px; display: flex; flex-direction: column; align-items: center;"></div>
 </div>
 
-<!-- ТВОИ ОКНА СОЗДАНИЯ -->
+<!-- ОКНА СОЗДАНИЯ -->
 <div id="createModal" class="full-modal">
-    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin:0">Новый план</h2>
-        <button onclick="closeCreateModal()" style="background:none; border:none; font-size: 24px;">✕</button>
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 style="margin:0; font-size: 24px;">Новый план</h2>
+        <button onclick="closeCreateModal()" style="background:#f5f5f5; border:none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
     </div>
 
     <div class="form-group">
-        <label>НАЗВАНИЕ ПРОЕКТА</label>
-        <input type="text" id="f-title" placeholder="Например: Съемка рекламы">
+        <label>Название проекта</label>
+        <input type="text" id="f-title" placeholder="Введите название...">
     </div>
 
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:12px;">
         <div class="form-group" style="flex:1">
-            <label>ДАТА</label>
+            <label>Дата</label>
             <input type="date" id="f-date">
         </div>
         <div class="form-group" style="flex:1">
-            <label>МЕСТО СБОРА</label>
+            <label>Место сбора</label>
             <input type="text" id="f-meeting" placeholder="Адрес">
         </div>
     </div>
@@ -75,21 +97,21 @@
     <div id="locationsWrapper">
         <div class="section-box">
             <div class="section-title">ЛОКАЦИЯ 1</div>
-            <input type="text" class="l-name" placeholder="Название или адрес" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;">
+            <input type="text" class="l-name" placeholder="Название или адрес" style="width:100%; padding:12px; border-radius:10px; border:1px solid #eee; outline: none;">
         </div>
     </div>
     
-    <button onclick="addLocationField()" style="background:none; border:none; color:#007aff; font-weight:700; margin-bottom:20px;">+ Добавить локацию</button>
+    <button onclick="addLocationField()" style="background:none; border:none; color:#007aff; font-weight:700; margin-bottom:25px; font-size: 15px;">+ Добавить локацию</button>
 
     <div class="section-box">
         <div class="section-title">ОБЕДЕННЫЙ ПЕРЕРЫВ</div>
-        <div style="display:flex; gap:10px;">
-            <input type="time" id="f-lunch-start" style="flex:1; padding:10px; border-radius:8px; border:1px solid #eee;">
-            <input type="time" id="f-lunch-end" style="flex:1; padding:10px; border-radius:8px; border:1px solid #eee;">
+        <div style="display:flex; gap:12px;">
+            <input type="time" id="f-lunch-start" style="flex:1; padding:12px; border-radius:10px; border:1px solid #eee;">
+            <input type="time" id="f-lunch-end" style="flex:1; padding:12px; border-radius:10px; border:1px solid #eee;">
         </div>
     </div>
 
-    <button class="btn-base btn-black" style="width:100%; margin-top: auto;" onclick="saveNewPlan()">Сохранить план</button>
+    <button class="btn-base btn-black" style="width:100%; margin-top: 20px;" onclick="saveNewPlan()">Сохранить план</button>
 </div>
 
 <script>
@@ -101,7 +123,10 @@
 
     let currentTab = 'active';
 
-    function openCreateModal() { document.getElementById('createModal').style.display = 'flex'; }
+    function openCreateModal() { 
+        document.getElementById('createModal').style.display = 'flex'; 
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
     function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
 
     function addLocationField() {
@@ -109,8 +134,9 @@
         const index = wrapper.children.length + 1;
         const div = document.createElement('div');
         div.className = 'section-box';
-        div.innerHTML = `<div class="section-title">ЛОКАЦИЯ ${index}</div><input type="text" class="l-name" placeholder="Название или адрес" style="width:100%; padding:10px; border-radius:8px; border:1px solid #eee;">`;
+        div.innerHTML = `<div class="section-title">ЛОКАЦИЯ ${index}</div><input type="text" class="l-name" placeholder="Название или адрес" style="width:100%; padding:12px; border-radius:10px; border:1px solid #eee; outline: none;">`;
         wrapper.appendChild(div);
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
 
     async function saveNewPlan() {
@@ -130,6 +156,7 @@
         }]);
 
         if (!error) {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             closeCreateModal();
             loadProjects();
         }
@@ -140,8 +167,10 @@
         const list = document.getElementById('projectList');
         list.innerHTML = (data || []).map(p => `
             <div class="project-card">
-                <div style="font-weight:800; font-size:16px;">${p.title}</div>
-                <div style="font-size:12px; color:#666; margin-top:5px;">🗓 ${p.date_scout || 'Нет даты'}</div>
+                <div style="font-weight:800; font-size:17px;">${p.title}</div>
+                <div style="font-size:13px; color:#777; margin-top:8px; display:flex; align-items:center; gap:5px;">
+                    <span>🗓</span> ${p.date_scout || 'Дата не указана'}
+                </div>
             </div>
         `).join('');
     }
@@ -151,6 +180,7 @@
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById(`t-${t}`).classList.add('active');
         document.getElementById('addBtn').style.display = (t === 'active') ? 'flex' : 'none';
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('soft');
         loadProjects();
     }
 
