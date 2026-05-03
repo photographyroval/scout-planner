@@ -21,58 +21,55 @@
         .tab[data-tab="hidden"].active { background: #8e8e93; color: #fff; }
         .tab[data-tab="trash"].active { background: #ff3b30; color: #fff; }
 
-        .trash-actions { display: none; gap: 10px; width: 100%; max-width: 350px; margin: 0 auto 15px auto; }
-        .trash-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
-        .btn-clear { background: #f2f2f2; color: #ff3b30; }
-        .btn-delete-selected { background: #000; color: #fff; display: none; }
+        /* Панель массовых действий */
+        .selection-actions { display: none; gap: 8px; width: 100%; max-width: 350px; margin: 0 auto; }
+        .sel-btn { flex: 1; padding: 15px; border-radius: 14px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-cancel { background: #f2f2f2; color: #000; }
+        .btn-action-main { background: #000; color: #fff; }
+        .btn-action-delete { background: #ffebeb; color: #ff3b30; }
 
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; }
-        .btn-black:active { opacity: 0.8; transform: scale(0.98); }
         
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; transition: background 0.2s; }
-        .card-content { flex: 1; padding-right: 10px; pointer-events: none; }
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; transition: transform 0.1s; user-select: none; -webkit-user-select: none; }
+        .project-card:active { transform: scale(0.98); }
+        .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; }
         
-        .list-tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; display: inline-block; width: fit-content; opacity: 0.9; }
+        .card-content { flex: 1; pointer-events: none; }
+        .list-tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; display: inline-block; width: fit-content; }
         
-        .card-checkbox { width: 22px; height: 22px; margin-right: 15px; accent-color: #ff3b30; pointer-events: none; border-radius: 6px; }
+        .card-checkbox { width: 22px; height: 22px; margin-right: 15px; accent-color: #007aff; pointer-events: none; display: none; }
+        .project-card.selection-mode .card-checkbox { display: block; }
 
         .card-menu-btn { position: absolute; top: 8px; right: 8px; font-size: 20px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #bbb; z-index: 10; }
         .dropdown-menu { position: absolute; top: 40px; right: 10px; background: #fff; border: 1px solid #eee; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 100; display: none; min-width: 160px; overflow: hidden; }
         .dropdown-menu.show { display: block; }
         .menu-item { padding: 14px 18px; font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 1px solid #f9f9f9; }
-        .menu-item:last-child { border-bottom: none; }
-        .menu-item:active { background: #f5f5f5; }
         .menu-item.delete { color: #ff3b30; }
 
-        .input-group { margin-bottom: 20px; width: 100%; max-width: 350px; }
-        .input-label { font-size: 13px; color: #888; margin-bottom: 8px; display: block; font-weight: 500; text-align: left; }
-        .main-input { width: 100%; padding: 14px; border: 1px solid #efefef; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; outline: none; background: #f9f9f9; color: #000; }
-
-        .location-block { background: #fcfcfc; border: 1px solid #eee; border-radius: 20px; padding: 15px; margin-bottom: 15px; width: 100%; max-width: 350px; }
-        .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #f9f9f9; }
-        .nav-btn { background: none; border: none; font-size: 16px; cursor: pointer; font-weight: 600; }
-        .add-loc-btn { background: #f2f2f2; border: 2px dashed #ccc; border-radius: 16px; padding: 15px; width: 100%; max-width: 350px; color: #888; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .main-input { width: 100%; padding: 14px; border: 1px solid #efefef; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; background: #f9f9f9; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="version-tag">v. 01.07 FIX_CB</div>
+<div class="version-tag">v. 01.08 MULTI</div>
 
 <div id="mainView">
     <div class="header-sticky">
         <button class="reload-btn" onclick="window.location.reload()">🔄</button>
-        <h2>Мои Проекты</h2>
+        <h2>Локации</h2>
         <div class="tabs">
             <div id="t-active" class="tab active" data-tab="active" onclick="switchTab('active')">Активные</div>
             <div id="t-hidden" class="tab" data-tab="hidden" onclick="switchTab('hidden')">🙈 Скрытые</div>
             <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">Корзина</div>
         </div>
         
-        <div id="trashActions" class="trash-actions">
-            <button class="trash-btn btn-clear" onclick="clearTrash()">Очистить корзину</button>
-            <button id="deleteSelectedBtn" class="trash-btn btn-delete-selected" onclick="deleteSelected()">Удалить (0)</button>
+        <!-- Кнопки массовых действий -->
+        <div id="selectionActions" class="selection-actions">
+            <button class="sel-btn btn-cancel" onclick="exitSelectionMode()">Отмена</button>
+            <button id="mainActionBtn" class="sel-btn btn-action-main" onclick="applyBulkAction('status')">Действие</button>
+            <button id="deleteActionBtn" class="sel-btn btn-action-delete" onclick="applyBulkAction('trash')">🗑</button>
         </div>
 
         <button id="addBtn" class="btn-black" onclick="createNewProject()">+ Создать план</button>
@@ -80,42 +77,42 @@
     <div class="container" id="projectList"></div>
 </div>
 
-<!-- Остальные View (editorView, locationView, planView) остаются без изменений как в прошлой версии -->
+<!-- Модальные окна редактора -->
 <div id="editorView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="showView('mainView')" style="color: #007aff;">← Отмена</button>
-        <button class="nav-btn" onclick="showView('locationView')" style="color: #34c759;">Далее</button>
+    <div style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
+        <button onclick="showView('mainView')" style="background:none; border:none; color:#007aff; font-weight:600;">Отмена</button>
+        <button onclick="showView('locationView')" style="background:none; border:none; color:#34c759; font-weight:800;">Далее</button>
     </div>
     <div class="container">
-        <h3 style="width: 100%; font-weight: 800;">Что планируем?</h3>
-        <div class="input-group"><span class="input-label">Название</span><input type="text" id="pTitle" class="main-input"></div>
-        <div class="input-group"><span class="input-label">Дата</span><input type="text" id="pDate" class="main-input" placeholder="дд.мм"></div>
-        <div class="input-group"><span class="input-label">Тег</span><input type="text" id="pTagText" class="main-input" placeholder="#"></div>
+        <h3 style="width:100%">Основное</h3>
+        <input type="text" id="pTitle" class="main-input" placeholder="Название проекта" style="margin-bottom:15px;">
+        <input type="text" id="pDate" class="main-input" placeholder="Дата (дд.мм)" style="margin-bottom:15px;">
+        <input type="text" id="pTagText" class="main-input" placeholder="Тег #">
     </div>
 </div>
 
 <div id="locationView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="showView('editorView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="showView('planView')" style="color: #34c759;">Далее</button>
+    <div style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
+        <button onclick="showView('editorView')" style="background:none; border:none; color:#007aff; font-weight:600;">Назад</button>
+        <button onclick="showView('planView')" style="background:none; border:none; color:#34c759; font-weight:800;">Далее</button>
     </div>
     <div class="container">
-        <h3 style="width: 100%; font-weight: 800;">Детали сбора</h3>
-        <div class="input-group"><span class="input-label">Время сбора</span><input type="text" id="pTime" class="main-input" placeholder="09:00"></div>
-        <div class="input-group"><span class="input-label">Выезд</span><input type="text" id="pExitTime" class="main-input" placeholder="10:00"></div>
-        <div class="input-group"><span class="input-label">Адрес</span><input type="text" id="pAddress" class="main-input"></div>
+        <h3 style="width:100%">Тайминг и адрес</h3>
+        <input type="text" id="pTime" class="main-input" placeholder="Сбор (09:00)" style="margin-bottom:15px;">
+        <input type="text" id="pExitTime" class="main-input" placeholder="Выезд (10:00)" style="margin-bottom:15px;">
+        <input type="text" id="pAddress" class="main-input" placeholder="Общий адрес">
     </div>
 </div>
 
 <div id="planView" class="hidden">
-    <div class="nav-bar">
-        <button class="nav-btn" onclick="showView('locationView')" style="color: #007aff;">← Назад</button>
-        <button class="nav-btn" onclick="finalSaveAll()" style="color: #34c759; font-weight:800;">ГОТОВО</button>
+    <div style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
+        <button onclick="showView('locationView')" style="background:none; border:none; color:#007aff; font-weight:600;">Назад</button>
+        <button onclick="finalSaveAll()" style="background:none; border:none; color:#34c759; font-weight:800;">ГОТОВО</button>
     </div>
     <div class="container">
-        <h3 style="width: 100%; font-weight: 800;">Локации</h3>
-        <div id="locationsList" style="width: 100%;"></div>
-        <button class="add-loc-btn" onclick="addLocationBlock()">+ Добавить локацию</button>
+        <h3 style="width:100%">Локации</h3>
+        <div id="locationsList" style="width:100%"></div>
+        <button onclick="addLocationBlock()" style="width:100%; padding:15px; border:2px dashed #ccc; border-radius:15px; background:none; color:#888; font-weight:700; margin-top:10px;">+ Добавить место</button>
     </div>
 </div>
 
@@ -127,118 +124,197 @@
     const uid = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
     let currentTab = 'active';
-    let currentEditId = null;
-    let locations = [];
+    let isSelectionMode = false;
     let selectedIds = new Set();
+    let locations = [];
+    let currentEditId = null;
+    let pressTimer;
 
     function switchTab(t) {
         currentTab = t;
-        selectedIds.clear();
+        exitSelectionMode();
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.getElementById('t-' + t).classList.add('active');
-        
-        document.getElementById('trashActions').style.display = (t === 'trash') ? 'flex' : 'none';
-        document.getElementById('addBtn').style.display = (t === 'active') ? 'block' : 'none';
-        
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         loadProjects();
     }
 
-    function toggleSelection(cardElement, id) {
-        const checkbox = cardElement.querySelector('.card-checkbox');
+    // Обработка клика по карточке
+    function handleCardClick(el, id) {
+        if (isSelectionMode || currentTab === 'trash') {
+            toggleSelection(el, id);
+        } else {
+            openEdit(id);
+        }
+    }
+
+    // Long Press логика
+    function startPress(el, id) {
+        if (currentTab === 'trash') return;
+        pressTimer = setTimeout(() => {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+            isSelectionMode = true;
+            toggleSelection(el, id);
+            updateUI();
+        }, 600);
+    }
+
+    function endPress() { clearTimeout(pressTimer); }
+
+    function toggleSelection(el, id) {
         if (selectedIds.has(id)) {
             selectedIds.delete(id);
-            checkbox.checked = false;
+            el.classList.remove('selected');
+            if (el.querySelector('.card-checkbox')) el.querySelector('.card-checkbox').checked = false;
         } else {
             selectedIds.add(id);
-            checkbox.checked = true;
+            el.classList.add('selected');
+            if (el.querySelector('.card-checkbox')) el.querySelector('.card-checkbox').checked = true;
         }
         
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-
-        const btn = document.getElementById('deleteSelectedBtn');
-        btn.style.display = selectedIds.size > 0 ? 'block' : 'none';
-        btn.innerText = `Удалить (${selectedIds.size})`;
+        if (selectedIds.size === 0 && currentTab !== 'trash') exitSelectionMode();
+        updateUI();
     }
 
-    async function clearTrash() {
-        if (!confirm("Очистить всю корзину навсегда?")) return;
+    function exitSelectionMode() {
+        isSelectionMode = false;
+        selectedIds.clear();
+        updateUI();
+        loadProjects();
+    }
 
-        const { error } = await client.from('projects').delete().eq('user_id', uid).eq('status', 'trash');
-        if (!error) {
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-            loadProjects();
+    function updateUI() {
+        const actions = document.getElementById('selectionActions');
+        const addBtn = document.getElementById('addBtn');
+        const mainBtn = document.getElementById('mainActionBtn');
+        const delBtn = document.getElementById('deleteActionBtn');
+
+        if (selectedIds.size > 0 || (currentTab === 'trash' && isSelectionMode)) {
+            actions.style.display = 'flex';
+            addBtn.style.display = 'none';
+            
+            // Настройка текста главной кнопки
+            if (currentTab === 'active') mainBtn.innerText = `Скрыть (${selectedIds.size})`;
+            else if (currentTab === 'hidden') mainBtn.innerText = `В актив (${selectedIds.size})`;
+            else if (currentTab === 'trash') {
+                mainBtn.innerText = `Восстановить (${selectedIds.size})`;
+                delBtn.innerText = "Удалить НАВСЕГДА";
+            }
+        } else {
+            actions.style.display = 'none';
+            addBtn.style.display = (currentTab === 'active') ? 'block' : 'none';
         }
     }
 
-    async function deleteSelected() {
+    async function applyBulkAction(type) {
         if (selectedIds.size === 0) return;
-        if (!confirm(`Удалить выбранное (${selectedIds.size}) навсегда?`)) return;
+        
+        let newStatus = '';
+        if (type === 'trash') {
+            if (!confirm(currentTab === 'trash' ? "Удалить безвозвратно?" : "Переместить в корзину?")) return;
+            newStatus = 'trash';
+        } else {
+            newStatus = (currentTab === 'active') ? 'hidden' : 'active';
+        }
 
-        const { error } = await client.from('projects').delete().in('id', Array.from(selectedIds));
+        let query;
+        if (currentTab === 'trash' && type === 'trash') {
+            query = client.from('projects').delete().in('id', Array.from(selectedIds));
+        } else {
+            query = client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds));
+        }
+
+        const { error } = await query;
         if (!error) {
-            selectedIds.clear();
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-            loadProjects();
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(type === 'trash' ? 'error' : 'success');
+            exitSelectionMode();
         }
     }
 
     async function loadProjects() {
         const { data, error } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
-        if (error) return list.innerHTML = 'Ошибка';
+        if (error) return;
         
         list.innerHTML = data?.length ? data.map(p => {
             const c = p.content || {};
             const locCount = c.locations ? c.locations.length : 0;
-            const startTime = c.meeting_time || '..:..';
-            let endTime = c.exit_time || '..:..';
-            if (locCount > 0 && c.locations[locCount - 1].time_start) endTime = c.locations[locCount - 1].time_start;
-
-            let statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'hidden')">🙈 Скрыть</div>`;
-            if (currentTab === 'hidden') statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'active')">✅ Вернуть в активные</div>`;
-            if (currentTab === 'trash') statusBtn = `<div class="menu-item" onclick="changeStatus(event, '${p.id}', 'active')">🔄 Восстановить</div>`;
+            const isTrash = currentTab === 'trash';
 
             return `
-                <div class="project-card" onclick="${currentTab === 'trash' ? `toggleSelection(this, '${p.id}')` : `openEdit('${p.id}')`}">
-                    ${currentTab === 'trash' ? `<input type="checkbox" class="card-checkbox" ${selectedIds.has(p.id) ? 'checked' : ''}>` : ''}
+                <div class="project-card ${isTrash || isSelectionMode ? 'selection-mode' : ''}" 
+                     onclick="handleCardClick(this, '${p.id}')"
+                     onmousedown="startPress(this, '${p.id}')" 
+                     onmouseup="endPress()" 
+                     ontouchstart="startPress(this, '${p.id}')" 
+                     ontouchend="endPress()">
+                    
+                    <input type="checkbox" class="card-checkbox" ${selectedIds.has(p.id) ? 'checked' : ''}>
                     
                     <div class="card-content">
-                        <div style="font-weight:800; font-size:17px; margin-bottom: 4px; color: #000;">${p.title}</div>
-                        <div style="font-size:12px; color:#666; margin-bottom: 6px; display: flex; gap: 8px;">
-                            <span>🗓 ${p.date_scout || '...'}</span>
-                            <span>🕒 ${startTime} — ${endTime}</span>
-                        </div>
-                        ${p.tags ? `<div class="list-tag" style="background:${(c.tag_color) || '#8e8e93'}">${p.tags}</div>` : ''}
+                        <div style="font-weight:800; font-size:18px; margin-bottom:4px;">${p.title}</div>
+                        <div style="font-size:12px; color:#666; margin-bottom:8px;">🗓 ${p.date_scout || '...'} | 📍 ${locCount}</div>
+                        ${p.tags ? `<div class="list-tag" style="background:#8e8e93">${p.tags}</div>` : ''}
                     </div>
-
-                    ${currentTab !== 'trash' ? `
-                    <div class="card-menu-btn" onclick="toggleMenu(event, '${p.id}')">⋮</div>
-                    <div id="menu-${p.id}" class="dropdown-menu">
-                        ${statusBtn}
-                        <div class="menu-item" onclick="event.stopPropagation(); alert('PDF скоро будет!')">📄 PDF</div>
-                        <div class="menu-item delete" onclick="changeStatus(event, '${p.id}', 'trash')">🗑 В корзину</div>
-                    </div>
-                    ` : ''}
                 </div>
             `;
-        }).join('') : '<p style="color:#bbb; margin-top:40px;">Здесь пока ничего нет</p>';
-        
-        const selBtn = document.getElementById('deleteSelectedBtn');
-        if(selBtn) selBtn.style.display = selectedIds.size > 0 ? 'block' : 'none';
+        }).join('') : '<p style="color:#bbb; margin-top:40px;">Пусто</p>';
     }
 
-    // Вспомогательные функции (toggleMenu, changeStatus, openEdit, etc) остаются прежними
-    function toggleMenu(e, id) { e.stopPropagation(); document.querySelectorAll('.dropdown-menu').forEach(m => { if (m.id !== 'menu-' + id) m.classList.remove('show'); }); document.getElementById('menu-' + id).classList.toggle('show'); }
-    window.onclick = () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
-    async function changeStatus(e, id, newStatus) { e.stopPropagation(); const { error } = await client.from('projects').update({ status: newStatus }).eq('id', id); if (!error) { if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); loadProjects(); } }
-    async function openEdit(id) { const { data } = await client.from('projects').select('*').eq('id', id).single(); if (data) { currentEditId = data.id; document.getElementById('pTitle').value = data.title || ''; document.getElementById('pDate').value = data.date_scout || ''; document.getElementById('pTagText').value = data.tags || ''; const c = data.content || {}; document.getElementById('pTime').value = c.meeting_time || ''; document.getElementById('pExitTime').value = c.exit_time || ''; document.getElementById('pAddress').value = c.location_address || ''; locations = c.locations || []; renderLocations(); showView('editorView'); } }
-    function showView(v) { document.querySelectorAll('body > div[id]').forEach(d => d.classList.add('hidden')); document.getElementById(v).classList.remove('hidden'); if(v === 'mainView') loadProjects(); }
-    async function finalSaveAll() { const payload = { user_id: uid, title: document.getElementById('pTitle').value, date_scout: document.getElementById('pDate').value, tags: document.getElementById('pTagText').value, content: { meeting_time: document.getElementById('pTime').value, exit_time: document.getElementById('pExitTime').value, location_address: document.getElementById('pAddress').value, locations: locations }, status: 'active' }; const { error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload }); if (!error) { if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); showView('mainView'); } }
-    function createNewProject() { if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); currentEditId = null; locations = []; document.querySelectorAll('input').forEach(i => i.value = ''); renderLocations(); showView('editorView'); }
+    // Редактор и сохранение
+    async function openEdit(id) {
+        const { data } = await client.from('projects').select('*').eq('id', id).single();
+        if (data) {
+            currentEditId = data.id;
+            document.getElementById('pTitle').value = data.title;
+            document.getElementById('pDate').value = data.date_scout;
+            document.getElementById('pTagText').value = data.tags;
+            const c = data.content || {};
+            document.getElementById('pTime').value = c.meeting_time || '';
+            document.getElementById('pExitTime').value = c.exit_time || '';
+            document.getElementById('pAddress').value = c.location_address || '';
+            locations = c.locations || [];
+            renderLocations();
+            showView('editorView');
+        }
+    }
+
+    async function finalSaveAll() {
+        const payload = {
+            user_id: uid, title: document.getElementById('pTitle').value,
+            date_scout: document.getElementById('pDate').value, tags: document.getElementById('pTagText').value,
+            content: {
+                meeting_time: document.getElementById('pTime').value, exit_time: document.getElementById('pExitTime').value,
+                location_address: document.getElementById('pAddress').value, locations: locations
+            },
+            status: 'active'
+        };
+        const { error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload });
+        if (!error) {
+            tg.HapticFeedback.notificationOccurred('success');
+            showView('mainView');
+        }
+    }
+
+    function createNewProject() {
+        currentEditId = null; locations = [];
+        document.querySelectorAll('input').forEach(i => i.value = '');
+        renderLocations();
+        showView('editorView');
+    }
+
     function addLocationBlock() { locations.push({ id: Date.now(), name: '', time_start: '' }); renderLocations(); }
-    function renderLocations() { const container = document.getElementById('locationsList'); container.innerHTML = locations.map((l, i) => `<div class="location-block"><input type="text" class="main-input" placeholder="Место" value="${l.name}" onchange="updateLoc(${l.id}, 'name', this.value)" style="margin-bottom:8px;"><input type="text" class="main-input" placeholder="Время" value="${l.time_start}" onchange="updateLoc(${l.id}, 'time_start', this.value)"></div>`).join(''); }
+    function renderLocations() {
+        document.getElementById('locationsList').innerHTML = locations.map(l => `
+            <div style="background:#f9f9f9; padding:15px; border-radius:15px; margin-bottom:10px;">
+                <input type="text" class="main-input" placeholder="Место" value="${l.name}" onchange="updateLoc(${l.id}, 'name', this.value)" style="margin-bottom:8px;">
+                <input type="text" class="main-input" placeholder="Время" value="${l.time_start}" onchange="updateLoc(${l.id}, 'time_start', this.value)">
+            </div>
+        `).join('');
+    }
     function updateLoc(id, f, v) { const l = locations.find(x => x.id === id); if(l) l[f] = v; }
+    function showView(v) { document.querySelectorAll('body > div[id]').forEach(d => d.classList.add('hidden')); document.getElementById(v).classList.remove('hidden'); if(v === 'mainView') loadProjects(); }
 
     loadProjects();
 </script>
