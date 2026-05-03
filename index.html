@@ -6,7 +6,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; margin: 0; padding: 0; color: #000; -webkit-tap-highlight-color: transparent; overflow-x: hidden; user-select: none; -webkit-user-select: none; }
         .version-tag { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 8px; font-size: 10px; z-index: 10001; pointer-events: none; font-weight: 600; }
         
         .header-sticky { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 25px 20px 15px 20px; border-bottom: 1px solid #f2f2f2; text-align: center; }
@@ -30,17 +30,16 @@
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
         .btn-black { background: #000; color: #fff; border: none; padding: 18px; border-radius: 16px; width: 100%; max-width: 350px; font-weight: 700; font-size: 16px; cursor: pointer; display: block; margin: 0 auto; }
         
-        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; user-select: none; -webkit-user-select: none; }
-        .project-card.selected { border: 2px solid #007aff; background: #f0f7ff; }
+        .project-card { border: 1px solid #eee; border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; width: 100%; max-width: 350px; box-sizing: border-box; position: relative; background: #fff; cursor: pointer; transition: background 0.2s; }
+        .project-card.selected { border: 2px solid #007aff !important; background: #f0f7ff !important; }
         
         .card-content { flex: 1; pointer-events: none; }
         .list-tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; color: #fff; font-weight: 700; text-transform: uppercase; display: inline-block; width: fit-content; }
         
-        .card-checkbox { width: 22px; height: 22px; margin-right: 15px; accent-color: #007aff; pointer-events: none; display: none; }
-        .project-card.selection-mode .card-checkbox { display: block; }
+        .card-checkbox { width: 20px; height: 20px; margin-right: 12px; pointer-events: none; accent-color: #007aff; display: none; }
+        .selection-mode .card-checkbox { display: block; }
 
-        /* Ввод */
-        .main-input { width: 100%; padding: 14px; border: 1px solid #efefef; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; background: #f9f9f9; color: #000; caret-color: #000; outline: none; }
+        .main-input { width: 100%; padding: 14px; border: 1px solid #efefef; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; background: #f9f9f9; color: #000; caret-color: #000; outline: none; user-select: text; -webkit-user-select: text; }
         .main-input:focus { border-color: #007aff; background: #fff; }
 
         .hidden { display: none !important; }
@@ -48,7 +47,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 01.10 KEYBOARD</div>
+<div class="version-tag">v. 01.11 PC-FIX</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -71,7 +70,7 @@
     <div class="container" id="projectList"></div>
 </div>
 
-<!-- Редактор -->
+<!-- Редактор и навигация остаются прежними -->
 <div id="editorView" class="hidden">
     <div style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
         <button onclick="showView('mainView')" style="background:none; border:none; color:#007aff; font-weight:600;">Отмена</button>
@@ -118,18 +117,13 @@
     let currentTab = 'active', isSelectionMode = false, selectedIds = new Set();
     let locations = [], currentEditId = null, pressTimer;
 
-    // Улучшенная логика маски для клавиатуры
+    // Маски для клавиатуры
     document.addEventListener('keydown', (e) => {
         if (!e.target.classList.contains('mask-input')) return;
-        
         const input = e.target;
         const key = e.key;
         const sep = input.dataset.mask === 'date' ? '.' : ':';
-
-        // Позволяем стрелки, Tab, Enter
         if (['ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Shift'].includes(key)) return;
-
-        // Обработка Backspace
         if (key === 'Backspace') {
             let pos = input.selectionStart;
             if (input.value[pos-1] === sep) {
@@ -139,16 +133,8 @@
             }
             return;
         }
-
-        // Запрет всего, кроме цифр
-        if (!/\d/.test(key)) {
-            e.preventDefault();
-            return;
-        }
-
-        // Авто-разделитель
-        let val = input.value.replace(/\D/g, '');
-        if (val.length === 2 && input.selectionStart === 2) {
+        if (!/\d/.test(key)) { e.preventDefault(); return; }
+        if (input.value.replace(/\D/g, '').length === 2 && input.selectionStart === 2) {
             input.value += sep;
         }
     });
@@ -158,53 +144,68 @@
         const input = e.target;
         const sep = input.dataset.mask === 'date' ? '.' : ':';
         let val = input.value.replace(/\D/g, '');
-        
-        if (val.length > 2) {
-            input.value = val.slice(0, 2) + sep + val.slice(2, 4);
-        } else {
-            input.value = val;
-        }
+        if (val.length > 2) input.value = val.slice(0, 2) + sep + val.slice(2, 4);
+        else input.value = val;
     });
 
-    // Остальная логика приложения
-    function switchTab(t) {
-        currentTab = t; exitSelectionMode();
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        document.getElementById('t-' + t).classList.add('active');
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        loadProjects();
+    // Логика выбора без сброса
+    function handleCardClick(id) {
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if (isSelectionMode || currentTab === 'trash') {
+            toggleSelection(el, id);
+        } else {
+            openEdit(id);
+        }
     }
 
-    function handleCardClick(el, id) {
-        if (isSelectionMode || currentTab === 'trash') toggleSelection(el, id);
-        else openEdit(id);
-    }
-
-    function startPress(el, id) {
+    function startPress(id) {
         if (currentTab === 'trash') return;
         pressTimer = setTimeout(() => {
+            isSelectionMode = true;
+            const el = document.querySelector(`[data-id="${id}"]`);
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-            isSelectionMode = true; toggleSelection(el, id); updateUI();
-        }, 600);
+            toggleSelection(el, id);
+            updateUI();
+        }, 700);
     }
+
     function endPress() { clearTimeout(pressTimer); }
 
     function toggleSelection(el, id) {
+        if (!el) return;
         if (selectedIds.has(id)) {
-            selectedIds.delete(id); el.classList.remove('selected');
+            selectedIds.delete(id);
+            el.classList.remove('selected');
         } else {
-            selectedIds.add(id); el.classList.add('selected');
+            selectedIds.add(id);
+            el.classList.add('selected');
         }
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        if (selectedIds.size === 0 && currentTab !== 'trash') exitSelectionMode();
-        updateUI();
+        if (selectedIds.size === 0 && currentTab !== 'trash') {
+            exitSelectionMode();
+        } else {
+            updateUI();
+        }
     }
 
-    function exitSelectionMode() { isSelectionMode = false; selectedIds.clear(); updateUI(); loadProjects(); }
+    function exitSelectionMode() {
+        isSelectionMode = false;
+        selectedIds.clear();
+        updateUI();
+        loadProjects();
+    }
 
     function updateUI() {
         const actions = document.getElementById('selectionActions'), addBtn = document.getElementById('addBtn');
         const mainBtn = document.getElementById('mainActionBtn'), delBtn = document.getElementById('deleteActionBtn');
+        const list = document.getElementById('projectList');
+
+        if (isSelectionMode || currentTab === 'trash') {
+            list.classList.add('selection-mode');
+        } else {
+            list.classList.remove('selection-mode');
+        }
+
         if (selectedIds.size > 0 || (currentTab === 'trash' && isSelectionMode)) {
             actions.style.display = 'flex'; addBtn.style.display = 'none';
             if (currentTab === 'active') mainBtn.innerText = `Скрыть (${selectedIds.size})`;
@@ -215,25 +216,20 @@
         }
     }
 
-    async function applyBulkAction(type) {
-        if (selectedIds.size === 0) return;
-        let newStatus = type === 'trash' ? 'trash' : (currentTab === 'active' ? 'hidden' : 'active');
-        let query = (currentTab === 'trash' && type === 'trash') ? 
-            client.from('projects').delete().in('id', Array.from(selectedIds)) : 
-            client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds));
-        const { error } = await query;
-        if (!error) {
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(type === 'trash' ? 'error' : 'success');
-            exitSelectionMode();
-        }
-    }
-
     async function loadProjects() {
         const { data, error } = await client.from('projects').select('*').eq('user_id', uid).eq('status', currentTab).order('created_at', {ascending: false});
         const list = document.getElementById('projectList');
         if (error) return;
         list.innerHTML = data?.length ? data.map(p => `
-            <div class="project-card ${currentTab === 'trash' || isSelectionMode ? 'selection-mode' : ''}" onclick="handleCardClick(this, '${p.id}')" onmousedown="startPress(this, '${p.id}')" onmouseup="endPress()" ontouchstart="startPress(this, '${p.id}')" ontouchend="endPress()">
+            <div class="project-card ${selectedIds.has(p.id) ? 'selected' : ''}" 
+                 data-id="${p.id}"
+                 onclick="handleCardClick('${p.id}')" 
+                 onmousedown="startPress('${p.id}')" 
+                 onmouseup="endPress()" 
+                 onmouseleave="endPress()"
+                 ontouchstart="startPress('${p.id}')" 
+                 ontouchend="endPress()"
+                 oncontextmenu="return false;">
                 <input type="checkbox" class="card-checkbox" ${selectedIds.has(p.id) ? 'checked' : ''}>
                 <div class="card-content">
                     <div style="font-weight:800; font-size:18px; margin-bottom:4px;">${p.title}</div>
@@ -242,44 +238,17 @@
                 </div>
             </div>
         `).join('') : '<p style="color:#bbb; margin-top:40px;">Пусто</p>';
+        updateUI();
     }
 
-    async function openEdit(id) {
-        const { data } = await client.from('projects').select('*').eq('id', id).single();
-        if (data) {
-            currentEditId = data.id;
-            document.getElementById('pTitle').value = data.title;
-            document.getElementById('pDate').value = data.date_scout;
-            document.getElementById('pTagText').value = data.tags;
-            const c = data.content || {};
-            document.getElementById('pTime').value = c.meeting_time || '';
-            document.getElementById('pExitTime').value = c.exit_time || '';
-            document.getElementById('pAddress').value = c.location_address || '';
-            locations = c.locations || []; renderLocations(); showView('editorView');
-        }
-    }
-
-    async function finalSaveAll() {
-        const payload = {
-            user_id: uid, title: document.getElementById('pTitle').value,
-            date_scout: document.getElementById('pDate').value, tags: document.getElementById('pTagText').value,
-            content: { meeting_time: document.getElementById('pTime').value, exit_time: document.getElementById('pExitTime').value, location_address: document.getElementById('pAddress').value, locations: locations },
-            status: 'active'
-        };
-        const { error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload });
-        if (!error) { tg.HapticFeedback.notificationOccurred('success'); showView('mainView'); }
-    }
-
+    // Вспомогательные функции остаются без изменений
+    function switchTab(t) { currentTab = t; exitSelectionMode(); document.querySelectorAll('.tab').forEach(el => el.classList.remove('active')); document.getElementById('t-' + t).classList.add('active'); if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); loadProjects(); }
+    async function applyBulkAction(type) { if (selectedIds.size === 0) return; let newStatus = type === 'trash' ? 'trash' : (currentTab === 'active' ? 'hidden' : 'active'); let query = (currentTab === 'trash' && type === 'trash') ? client.from('projects').delete().in('id', Array.from(selectedIds)) : client.from('projects').update({ status: newStatus }).in('id', Array.from(selectedIds)); const { error } = await query; if (!error) { if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(type === 'trash' ? 'error' : 'success'); exitSelectionMode(); } }
+    async function openEdit(id) { const { data } = await client.from('projects').select('*').eq('id', id).single(); if (data) { currentEditId = data.id; document.getElementById('pTitle').value = data.title; document.getElementById('pDate').value = data.date_scout; document.getElementById('pTagText').value = data.tags; const c = data.content || {}; document.getElementById('pTime').value = c.meeting_time || ''; document.getElementById('pExitTime').value = c.exit_time || ''; document.getElementById('pAddress').value = c.location_address || ''; locations = c.locations || []; renderLocations(); showView('editorView'); } }
+    async function finalSaveAll() { const payload = { user_id: uid, title: document.getElementById('pTitle').value, date_scout: document.getElementById('pDate').value, tags: document.getElementById('pTagText').value, content: { meeting_time: document.getElementById('pTime').value, exit_time: document.getElementById('pExitTime').value, location_address: document.getElementById('pAddress').value, locations: locations }, status: 'active' }; const { error } = await client.from('projects').upsert({ id: currentEditId || undefined, ...payload }); if (!error) { tg.HapticFeedback.notificationOccurred('success'); showView('mainView'); } }
     function createNewProject() { currentEditId = null; locations = []; document.querySelectorAll('input').forEach(i => i.value = ''); renderLocations(); showView('editorView'); }
     function addLocationBlock() { locations.push({ id: Date.now(), name: '', time_start: '' }); renderLocations(); }
-    function renderLocations() {
-        document.getElementById('locationsList').innerHTML = locations.map(l => `
-            <div style="background:#f9f9f9; padding:15px; border-radius:15px; margin-bottom:10px;">
-                <input type="text" class="main-input" placeholder="Место" value="${l.name}" onchange="updateLoc(${l.id}, 'name', this.value)" style="margin-bottom:8px;">
-                <input type="text" class="main-input mask-input" data-mask="time" placeholder="Время (00:00)" maxlength="5" inputmode="decimal" value="${l.time_start}" onchange="updateLoc(${l.id}, 'time_start', this.value)">
-            </div>
-        `).join('');
-    }
+    function renderLocations() { document.getElementById('locationsList').innerHTML = locations.map(l => ` <div style="background:#f9f9f9; padding:15px; border-radius:15px; margin-bottom:10px;"> <input type="text" class="main-input" placeholder="Место" value="${l.name}" onchange="updateLoc(${l.id}, 'name', this.value)" style="margin-bottom:8px;"> <input type="text" class="main-input mask-input" data-mask="time" placeholder="Время (00:00)" maxlength="5" inputmode="decimal" value="${l.time_start}" onchange="updateLoc(${l.id}, 'time_start', this.value)"> </div> `).join(''); }
     function updateLoc(id, f, v) { const l = locations.find(x => x.id === id); if(l) l[f] = v; }
     function showView(v) { document.querySelectorAll('body > div[id]').forEach(d => d.classList.add('hidden')); document.getElementById(v).classList.remove('hidden'); if(v === 'mainView') loadProjects(); }
 
