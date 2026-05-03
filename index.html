@@ -17,7 +17,6 @@
         .tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; align-items: center; }
         .tab { font-size: 13px; font-weight: 700; color: #999; padding: 8px 16px; border-radius: 12px; cursor: pointer; background: #f5f5f5; border: none; transition: all 0.3s ease; }
         
-        /* Цвета вкладок для синхронизации с кнопками */
         .tab[data-tab="active"].active { background: #34c759; color: #fff; }
         .tab[data-tab="hidden"].active { background: #8e8e93; color: #fff; }
         .tab[data-tab="trash"].active { background: #ff3b30; color: #fff; }
@@ -31,12 +30,12 @@
         .btn-action-main { flex: 2; color: #fff; }
         .btn-action-delete { flex: 1; font-size: 18px; }
 
-        /* Динамические цвета кнопок действий */
-        .theme-active { background: #8e8e93; } /* Кнопка "Скрыть" (цвет Скрытых) */
-        .theme-hidden { background: #34c759; } /* Кнопка "В актив" (цвет Активных) */
+        /* Темы кнопок */
+        .theme-active { background: #8e8e93; } 
+        .theme-hidden { background: #34c759; } 
         .theme-trash-restore { background: #34c759; } 
-        .theme-trash-del { background: #ff3b30; color: #fff !important; } /* Удалить навсегда */
-        .theme-to-trash { background: #ffebeb; color: #ff3b30 !important; } /* В корзину */
+        .theme-trash-del { background: #ff3b30; color: #fff !important; } 
+        .theme-to-trash { background: #ffebeb; color: #ff3b30 !important; } 
 
         .container { padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .btn-black { background: #000; color: #fff; width: 100%; max-width: 350px; margin: 0 auto; display: flex; }
@@ -52,7 +51,7 @@
 </head>
 <body>
 
-<div class="version-tag">v. 01.19 CONTEXT-COLORS</div>
+<div class="version-tag">v. 01.20 TRASH-CONTEXT-FIXED</div>
 
 <div id="mainView">
     <div class="header-sticky">
@@ -64,14 +63,12 @@
             <div id="t-trash" class="tab" data-tab="trash" onclick="switchTab('trash')">Корзина</div>
         </div>
         
-        <!-- Кнопки действий (видны только при выделении) -->
         <div id="selectionActions" class="selection-actions">
             <button class="btn-base btn-cancel" onclick="exitSelectionMode()">Отмена</button>
             <button id="mainActionBtn" class="btn-base btn-action-main" onclick="applyBulkAction()">Действие</button>
             <button id="deleteActionBtn" class="btn-base btn-action-delete" onclick="applyBulkAction('trash')">🗑</button>
         </div>
 
-        <!-- Кнопка создания (видна в обычном режиме) -->
         <button id="addBtn" class="btn-base btn-black" onclick="createNewProject()">+ Создать план</button>
     </div>
     <div class="container" id="projectList"></div>
@@ -104,15 +101,24 @@
 
     function handleCardClick(e, id) {
         if (isLongPressOccurred) { isLongPressOccurred = false; return; }
-        if (isSelectionMode || currentTab === 'trash') toggleId(id);
-        else console.log("Edit project:", id);
+        // В корзине любой клик — это выбор/снятие выбора
+        if (isSelectionMode || currentTab === 'trash') {
+            if (currentTab === 'trash' && !isSelectionMode) isSelectionMode = true;
+            toggleId(id);
+        } else {
+            console.log("Edit project:", id);
+        }
     }
 
     function toggleId(id) {
         if (selectedIds.has(id)) selectedIds.delete(id);
         else selectedIds.add(id);
+        
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        if (selectedIds.size === 0 && currentTab !== 'trash') isSelectionMode = false;
+        
+        // Выход из режима если всё снято (кроме корзины, там режим держится пока есть клики)
+        if (selectedIds.size === 0) isSelectionMode = false;
+        
         updateSelectionUI();
         renderSelectionState(); 
     }
@@ -134,11 +140,13 @@
         const mainBtn = document.getElementById('mainActionBtn');
         const delBtn = document.getElementById('deleteActionBtn');
 
-        // Очистка старых тем
         mainBtn.className = "btn-base btn-action-main";
         delBtn.className = "btn-base btn-action-delete";
+        mainBtn.style.flex = "2";
+        delBtn.style.flex = "1";
 
-        if (isSelectionMode || currentTab === 'trash') {
+        // Показываем действия ТОЛЬКО если есть выбранные элементы
+        if (selectedIds.size > 0) {
             list.classList.add('selection-mode');
             actions.style.display = 'flex';
             addBtn.style.display = 'none';
@@ -146,25 +154,28 @@
             let count = selectedIds.size;
             if (currentTab === 'active') {
                 mainBtn.innerText = `Скрыть (${count})`;
-                mainBtn.classList.add('theme-active'); // Серый (как скрытые)
-                delBtn.classList.add('theme-to-trash'); // Светло-красный
+                mainBtn.classList.add('theme-active');
+                delBtn.classList.add('theme-to-trash');
                 delBtn.style.display = 'flex';
             } else if (currentTab === 'hidden') {
                 mainBtn.innerText = `В актив (${count})`;
-                mainBtn.classList.add('theme-hidden'); // Зеленый (как активные)
-                delBtn.classList.add('theme-to-trash'); 
+                mainBtn.classList.add('theme-hidden');
+                delBtn.classList.add('theme-to-trash');
                 delBtn.style.display = 'flex';
-            } else {
+            } else if (currentTab === 'trash') {
                 mainBtn.innerText = `Вернуть (${count})`;
-                mainBtn.classList.add('theme-trash-restore'); // Зеленый
+                mainBtn.classList.add('theme-trash-restore');
                 delBtn.innerText = "Удалить";
-                delBtn.classList.add('theme-trash-del'); // Ярко-красный
+                delBtn.classList.add('theme-trash-del');
+                delBtn.style.display = 'flex';
                 delBtn.style.flex = "2";
                 mainBtn.style.flex = "1";
             }
         } else {
+            // Если ничего не выбрано
             list.classList.remove('selection-mode');
             actions.style.display = 'none';
+            // Кнопка добавить только в активных
             addBtn.style.display = (currentTab === 'active') ? 'flex' : 'none';
         }
     }
@@ -203,7 +214,7 @@
 
     function switchTab(t) {
         currentTab = t;
-        exitSelectionMode();
+        exitSelectionMode(); // При смене таба всегда сбрасываем выбор
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         document.querySelector(`.tab[data-tab="${t}"]`).classList.add('active');
         loadProjects();
